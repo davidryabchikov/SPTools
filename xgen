@@ -1191,119 +1191,252 @@ function displayImage(file) {
     reader.readAsDataURL(file);
 }
 
+// Utility function to create a download from a blob
+function downloadFromBlob(blob, filename) {
+    // Create object URL
+    const blobUrl = URL.createObjectURL(blob);
+    
+    // Create temporary link
+    const link = document.createElement('a');
+    link.style.display = 'none';
+    link.href = blobUrl;
+    link.download = filename;
+    
+    // Add to document, trigger download, and cleanup
+    document.body.appendChild(link);
+    link.click();
+    
+    // Cleanup after small delay to ensure download starts
+    setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+    }, 100);
+}
+
+// Main download handler
 async function handleTweetDownload() {
+    const wasPreviewMode = document.body.classList.contains('preview-mode');
+    let originalBadgeHtml = null;
+    let toast = null;
+
     try {
-        const wasPreviewMode = document.body.classList.contains('preview-mode');
         if (!wasPreviewMode) {
             togglePreviewMode(true);
         }
 
-        showToast('Preparing the tweet...');
-
+        toast = showToast('Preparing your tweet...', false);
+        
         const tweetCard = document.querySelector('.tweet-card');
+        if (!tweetCard) throw new Error('Tweet card not found');
+
+        // Calculate optimal scale for device
+        const scale = Math.max(2, window.devicePixelRatio * 2);
+
+        // Create canvas with optimized settings
         const canvas = await html2canvas(tweetCard, {
             backgroundColor: null,
-            scale: 2,
+            scale: scale,
             logging: false,
             allowTaint: true,
             useCORS: true,
             onclone: (clonedDoc) => {
+                const clonedCard = clonedDoc.querySelector('.tweet-card');
+                
+                // Apply base font family to card
+                clonedCard.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+                
+                // Handle profile name
+                const profileName = clonedCard.querySelector('.profile-name');
+                if (profileName) {
+                    profileName.style.cssText = `
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                        font-weight: 600;
+                        font-size: 15px;
+                        line-height: normal;
+                    `;
+                }
+
+                // Handle profile handle
+                const profileHandle = clonedCard.querySelector('.profile-handle');
+                if (profileHandle) {
+                    profileHandle.style.cssText = `
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                        font-size: 15px;
+                        line-height: normal;
+                    `;
+                }
+
+                // Handle tweet text
+                const tweetText = clonedCard.querySelector('.tweet-text');
+                if (tweetText) {
+                    tweetText.style.cssText = `
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                        font-size: 15px;
+                        line-height: 20px;
+                        white-space: pre-wrap;
+                    `;
+                }
+
+                // Handle metadata texts
+                const tweetMeta = clonedCard.querySelector('.tweet-meta');
+                if (tweetMeta) {
+                    tweetMeta.style.cssText = `
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                        font-size: 15px;
+                        line-height: normal;
+                    `;
+                }
+
+                // Handle stats
+                clonedCard.querySelectorAll('.stat').forEach(stat => {
+                    stat.style.cssText = `
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                        font-size: 13px;
+                        line-height: normal;
+                    `;
+                });
+
+                // Handle counts
+                clonedCard.querySelectorAll('.count').forEach(count => {
+                    count.style.cssText = `
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                        font-size: 13px;
+                        line-height: normal;
+                    `;
+                });
+
+                // Handle views count specifically
+                const viewsCount = clonedCard.querySelector('.count.views');
+                if (viewsCount) {
+                    viewsCount.style.fontWeight = '700';
+                }
+
                 // Handle verified badge
-                const verifiedBadgeContainer = clonedDoc.querySelector('.verified-badge-container');
+                const verifiedBadgeContainer = clonedCard.querySelector('.verified-badge-container');
                 if (verifiedBadgeContainer) {
-                    verifiedBadgeContainer.style.border = 'none';
-                    const verifiedBadge = verifiedBadgeContainer.querySelector('.verified-badge');
-                    if (verifiedBadge) {
-                        verifiedBadge.style.width = '20px';
-                        verifiedBadge.style.height = '20px';
-                        verifiedBadge.style.display = 'inline-block';
-                        verifiedBadge.style.visibility = 'visible';
-                        verifiedBadge.style.opacity = '1';
+                    verifiedBadgeContainer.style.cssText = 'border: none; margin: 0 4px;';
+                    const badge = verifiedBadgeContainer.querySelector('.verified-badge');
+                    if (badge) {
+                        badge.style.cssText = 'width: 20px; height: 20px; display: inline-block; visibility: visible; opacity: 1;';
                     }
                 }
 
                 // Handle upload area
-                const clonedUploadArea = clonedDoc.querySelector('.upload-area');
-                if (clonedUploadArea && !clonedUploadArea.querySelector('img')) {
-                    clonedUploadArea.style.display = 'none';
+                const uploadArea = clonedCard.querySelector('.upload-area');
+                if (uploadArea && !uploadArea.querySelector('img')) {
+                    uploadArea.style.display = 'none';
                 }
 
                 // Set background color based on theme
-                const body = clonedDoc.body;
-                const tweetCard = clonedDoc.querySelector('.tweet-card');
+                const theme = clonedDoc.body.classList.contains('dark') ? 'dark' : 
+                            clonedDoc.body.classList.contains('dim') ? 'dim' : 'light';
                 
-                const bgColor = body.classList.contains('dark') ? 'rgb(0, 0, 0)' : 
-                               body.classList.contains('dim') ? 'rgb(21, 32, 43)' : 
-                               'rgb(255, 255, 255)';
-                               
-                tweetCard.style.backgroundColor = bgColor;
+                const bgColors = {
+                    dark: 'rgb(0, 0, 0)',
+                    dim: 'rgb(21, 32, 43)',
+                    light: 'rgb(255, 255, 255)'
+                };
+                
+                clonedCard.style.backgroundColor = bgColors[theme];
+                
+                // Force GPU acceleration
+                clonedCard.style.transform = 'translateZ(0)';
 
-                // Force repaint for Safari
-                tweetCard.style.transform = 'translateZ(0)';
-                tweetCard.style.webkitTransform = 'translateZ(0)';
+                // Remove any contenteditable styling
+                clonedCard.querySelectorAll('[contenteditable]').forEach(el => {
+                    el.style.backgroundColor = 'transparent';
+                    el.style.padding = '0';
+                });
             },
-            foreignObjectRendering: false,
             removeContainer: true,
-            imageTimeout: 0,
-            async: true
+            imageTimeout: 15000,
         });
 
-        // Safari-specific handling
-        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-        
-        if (isSafari) {
-            canvas.toBlob(function(blob) {
-                const reader = new FileReader();
-                reader.onloadend = function() {
-                    const base64data = reader.result;
-                    const link = document.createElement('a');
-                    link.href = base64data;
-                    link.download = `tweet_${Date.now()}.png`;
-                    
-                    if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
-                        window.open(base64data);
-                        showToast('Image opened in new tab. Long press to save.');
-                        if (!wasPreviewMode) togglePreviewMode(false);
-                        return;
-                    }
-                    
-                    document.body.appendChild(link);
-                    link.click();
-                    
-                    setTimeout(() => {
-                        document.body.removeChild(link);
-                        showToast('Tweet downloaded!');
-                    }, 100);
-                };
-                reader.readAsDataURL(blob);
+        // Convert to blob
+        const blob = await new Promise((resolve, reject) => {
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    resolve(blob);
+                } else {
+                    reject(new Error('Failed to create image blob'));
+                }
             }, 'image/png', 1.0);
-        } else {
-            const imgData = canvas.toDataURL('image/png');
-            const link = document.createElement('a');
-            link.href = imgData;
-            link.download = `tweet_${Date.now()}.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            showToast('Tweet downloaded!');
-        }
+        });
 
-        if (!wasPreviewMode) {
-            togglePreviewMode(false);
-        }
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const filename = `tweet_${timestamp}.png`;
 
-    } catch (err) {
-        console.error('Download failed:', err);
-        showToast('Failed to download. Please try again.');
+        downloadFromBlob(blob, filename);
+
+        if (toast) toast.remove();
+        showToast('Tweet downloaded successfully!');
+
+    } catch (error) {
+        console.error('Download failed:', error);
+        if (toast) toast.remove();
+        showToast('Failed to download tweet. Please try again.');
+
+    } finally {
         if (!wasPreviewMode) {
             togglePreviewMode(false);
         }
     }
 }
 
-// Add event listener to download button
+// Improved toast function with optional persistence
+function showToast(message, autoHide = true) {
+    // Remove existing toasts
+    const existingToast = document.querySelector('.toast-message');
+    if (existingToast) {
+        existingToast.remove();
+    }
+
+    // Create new toast
+    const toast = document.createElement('div');
+    toast.className = 'toast-message';
+    
+    Object.assign(toast.style, {
+        position: 'fixed',
+        bottom: '20px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        backgroundColor: '#0DCF7F',
+        color: 'white',
+        padding: '12px 24px',
+        borderRadius: '8px',
+        fontSize: '14px',
+        fontWeight: '500',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+        zIndex: '1000',
+        opacity: '0',
+        transition: 'opacity 0.3s',
+        whiteSpace: 'nowrap',
+        maxWidth: '90%',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+    });
+    
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    // Show toast
+    requestAnimationFrame(() => toast.style.opacity = '1');
+    
+    // Auto-hide toast if enabled
+    if (autoHide) {
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    return toast;
+}
+
 const downloadButton = document.querySelector('.download-btn');
 downloadButton.addEventListener('click', handleTweetDownload);
+
+
 function showToast(message) {
     // Remove any existing toast first
     const existingToast = document.querySelector('.toast-message');
