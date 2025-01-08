@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <style>
     :root {
@@ -1191,251 +1192,187 @@ function displayImage(file) {
     reader.readAsDataURL(file);
 }
 
-// Utility function to create a download from a blob
-function downloadFromBlob(blob, filename) {
-    // Create object URL
-    const blobUrl = URL.createObjectURL(blob);
-    
-    // Create temporary link
-    const link = document.createElement('a');
-    link.style.display = 'none';
-    link.href = blobUrl;
-    link.download = filename;
-    
-    // Add to document, trigger download, and cleanup
-    document.body.appendChild(link);
-    link.click();
-    
-    // Cleanup after small delay to ensure download starts
-    setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(blobUrl);
-    }, 100);
-}
 
-// Main download handler
+
 async function handleTweetDownload() {
+    const tweetCard = document.querySelector('.tweet-card');
+    if (!tweetCard) {
+        showToast('Tweet card not found', true);
+        return;
+    }
+
+    // Save preview mode state
     const wasPreviewMode = document.body.classList.contains('preview-mode');
-    let originalBadgeHtml = null;
-    let toast = null;
+    if (!wasPreviewMode) {
+        togglePreviewMode(true);
+    }
+
+    // Store original styles
+    const originalStyles = {
+        transform: tweetCard.style.transform,
+        transition: tweetCard.style.transition,
+        width: tweetCard.style.width,
+        height: tweetCard.style.height,
+        margin: tweetCard.style.margin,
+        maxWidth: tweetCard.style.maxWidth,
+        minWidth: tweetCard.style.minWidth
+    };
 
     try {
-        if (!wasPreviewMode) {
-            togglePreviewMode(true);
-        }
+        showToast('Preparing your tweet...');
 
-        toast = showToast('Preparing your tweet...', false);
-        
-        const tweetCard = document.querySelector('.tweet-card');
-        if (!tweetCard) throw new Error('Tweet card not found');
+        // Get exact dimensions
+        const rect = tweetCard.getBoundingClientRect();
 
-        // Calculate optimal scale for device
-        const scale = Math.max(2, window.devicePixelRatio * 2);
+        // Prepare tweet card for capture
+        Object.assign(tweetCard.style, {
+            transform: 'none',
+            transition: 'none',
+            width: rect.width + 'px',
+            height: 'auto',
+            margin: '0',
+            maxWidth: rect.width + 'px',
+            minWidth: rect.width + 'px'
+        });
 
-        // Create canvas with optimized settings
+        // Force reflow
+        tweetCard.offsetHeight;
+
+        // Get device pixel ratio and scale
+        const scale = Math.max(2, window.devicePixelRatio);
+
+        // Configure html2canvas
         const canvas = await html2canvas(tweetCard, {
-            backgroundColor: null,
             scale: scale,
-            logging: false,
-            allowTaint: true,
             useCORS: true,
+            allowTaint: true,
+            backgroundColor: getComputedStyle(tweetCard).backgroundColor,
+            logging: false,
             onclone: (clonedDoc) => {
-                const clonedCard = clonedDoc.querySelector('.tweet-card');
-                
-                // Apply base font family to card
-                clonedCard.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-                
-                // Handle profile name
-                const profileName = clonedCard.querySelector('.profile-name');
-                if (profileName) {
-                    profileName.style.cssText = `
-                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                        font-weight: 600;
-                        font-size: 15px;
-                        line-height: normal;
-                    `;
-                }
+                const clonedElement = clonedDoc.querySelector('.tweet-card');
+                if (clonedElement) {
+                    // Ensure proper styling in cloned element
+                    clonedElement.style.transform = 'none';
+                    clonedElement.style.margin = '0';
+                    
+                    // Handle empty upload area
+                    const uploadArea = clonedElement.querySelector('.upload-area');
+                    if (uploadArea && !uploadArea.querySelector('img')) {
+                        uploadArea.style.display = 'none';
+                    }
 
-                // Handle profile handle
-                const profileHandle = clonedCard.querySelector('.profile-handle');
-                if (profileHandle) {
-                    profileHandle.style.cssText = `
-                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                        font-size: 15px;
-                        line-height: normal;
-                    `;
-                }
-
-                // Handle tweet text
-                const tweetText = clonedCard.querySelector('.tweet-text');
-                if (tweetText) {
-                    tweetText.style.cssText = `
-                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                        font-size: 15px;
-                        line-height: 20px;
-                        white-space: pre-wrap;
-                    `;
-                }
-
-                // Handle metadata texts
-                const tweetMeta = clonedCard.querySelector('.tweet-meta');
-                if (tweetMeta) {
-                    tweetMeta.style.cssText = `
-                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                        font-size: 15px;
-                        line-height: normal;
-                    `;
-                }
-
-                // Handle stats
-                clonedCard.querySelectorAll('.stat').forEach(stat => {
-                    stat.style.cssText = `
-                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                        font-size: 13px;
-                        line-height: normal;
-                    `;
-                });
-
-                // Handle counts
-                clonedCard.querySelectorAll('.count').forEach(count => {
-                    count.style.cssText = `
-                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                        font-size: 13px;
-                        line-height: normal;
-                    `;
-                });
-
-                // Handle views count specifically
-                const viewsCount = clonedCard.querySelector('.count.views');
-                if (viewsCount) {
-                    viewsCount.style.fontWeight = '700';
-                }
-
-                // Handle verified badge
-                const verifiedBadgeContainer = clonedCard.querySelector('.verified-badge-container');
-                if (verifiedBadgeContainer) {
-                    verifiedBadgeContainer.style.cssText = 'border: none; margin: 0 4px;';
-                    const badge = verifiedBadgeContainer.querySelector('.verified-badge');
-                    if (badge) {
-                        badge.style.cssText = 'width: 20px; height: 20px; display: inline-block; visibility: visible; opacity: 1;';
+                    // Handle views count in preview mode
+                    const viewsCount = clonedElement.querySelector('.count.views');
+                    const viewsSpan = clonedElement.querySelector('.views');
+                    if (viewsCount && viewsSpan) {
+                        const value = parseInt(viewsCount.textContent) || 0;
+                        if (value === 0) {
+                            viewsSpan.style.display = 'none';
+                        }
                     }
                 }
-
-                // Handle upload area
-                const uploadArea = clonedCard.querySelector('.upload-area');
-                if (uploadArea && !uploadArea.querySelector('img')) {
-                    uploadArea.style.display = 'none';
-                }
-
-                // Set background color based on theme
-                const theme = clonedDoc.body.classList.contains('dark') ? 'dark' : 
-                            clonedDoc.body.classList.contains('dim') ? 'dim' : 'light';
-                
-                const bgColors = {
-                    dark: 'rgb(0, 0, 0)',
-                    dim: 'rgb(21, 32, 43)',
-                    light: 'rgb(255, 255, 255)'
-                };
-                
-                clonedCard.style.backgroundColor = bgColors[theme];
-                
-                // Force GPU acceleration
-                clonedCard.style.transform = 'translateZ(0)';
-
-                // Remove any contenteditable styling
-                clonedCard.querySelectorAll('[contenteditable]').forEach(el => {
-                    el.style.backgroundColor = 'transparent';
-                    el.style.padding = '0';
-                });
-            },
-            removeContainer: true,
-            imageTimeout: 15000,
+            }
         });
 
-        // Convert to blob
-        const blob = await new Promise((resolve, reject) => {
-            canvas.toBlob((blob) => {
-                if (blob) {
-                    resolve(blob);
-                } else {
-                    reject(new Error('Failed to create image blob'));
-                }
-            }, 'image/png', 1.0);
-        });
-
+        // Generate filename
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const filename = `tweet_${timestamp}.png`;
 
-        downloadFromBlob(blob, filename);
+        // Convert to blob
+        canvas.toBlob((blob) => {
+            if (!blob) {
+                throw new Error('Failed to create image blob');
+            }
 
-        if (toast) toast.remove();
-        showToast('Tweet downloaded successfully!');
+            // Create download link
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+
+            // Cleanup
+            setTimeout(() => {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }, 100);
+
+            showToast('Tweet downloaded successfully!');
+        }, 'image/png', 1.0);
 
     } catch (error) {
         console.error('Download failed:', error);
-        if (toast) toast.remove();
-        showToast('Failed to download tweet. Please try again.');
-
+        showToast('Failed to download tweet. Please try again.', true);
     } finally {
+        // Restore original styles
+        Object.assign(tweetCard.style, originalStyles);
+        
+        // Restore preview mode
         if (!wasPreviewMode) {
             togglePreviewMode(false);
         }
     }
 }
 
-// Improved toast function with optional persistence
-function showToast(message, autoHide = true) {
-    // Remove existing toasts
-    const existingToast = document.querySelector('.toast-message');
-    if (existingToast) {
-        existingToast.remove();
+// Updated toast function with better positioning and stacking
+function showToast(message, isError = false) {
+    // Create or get toast container
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container';
+        Object.assign(toastContainer.style, {
+            position: 'fixed',
+            bottom: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: '10000',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px'
+        });
+        document.body.appendChild(toastContainer);
     }
 
     // Create new toast
     const toast = document.createElement('div');
     toast.className = 'toast-message';
-    
     Object.assign(toast.style, {
-        position: 'fixed',
-        bottom: '20px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        backgroundColor: '#0DCF7F',
+        backgroundColor: isError ? '#ff4d4f' : '#0DCF7F',
         color: 'white',
         padding: '12px 24px',
         borderRadius: '8px',
         fontSize: '14px',
         fontWeight: '500',
         boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-        zIndex: '1000',
         opacity: '0',
-        transition: 'opacity 0.3s',
-        whiteSpace: 'nowrap',
-        maxWidth: '90%',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis'
+        transition: 'opacity 0.3s ease',
+        textAlign: 'center'
     });
     
     toast.textContent = message;
-    document.body.appendChild(toast);
+    toastContainer.appendChild(toast);
     
-    // Show toast
+    // Animate in
     requestAnimationFrame(() => toast.style.opacity = '1');
     
-    // Auto-hide toast if enabled
-    if (autoHide) {
+    // Remove after delay
+    setTimeout(() => {
+        toast.style.opacity = '0';
         setTimeout(() => {
-            toast.style.opacity = '0';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    }
-
-    return toast;
+            if (toastContainer.contains(toast)) {
+                toastContainer.removeChild(toast);
+            }
+            if (toastContainer.children.length === 0) {
+                document.body.removeChild(toastContainer);
+            }
+        }, 300);
+    }, 3000);
 }
 
-const downloadButton = document.querySelector('.download-btn');
-downloadButton.addEventListener('click', handleTweetDownload);
-
+// Add click handler to download button
+document.querySelector('.download-btn').addEventListener('click', handleTweetDownload);
 
 function showToast(message) {
     // Remove any existing toast first
