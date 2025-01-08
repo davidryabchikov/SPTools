@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<style>
+    :root {
+    /* Light Theme */
+    --bg-light: #ffffff;
+    --text-light: #0f1419;
+    --text-secondary-light: #536471;
+    --border-light: #cfd9de;
+    --button-light: #0f1419;
+    --button-text-light: #ffffff;
+    --hover-light: rgba(15, 20, 25, 0.1);
+    
+    /* Dark Theme */
+    --bg-dark: #000000;
+    --text-dark: #ffffff;
+    --text-secondary-dark: #71767b;
+    --border-dark: #2f3336;
+    --button-dark: #ffffff;
+    --button-text-dark: #000000;
+    --hover-dark: rgba(239, 243, 244, 0.1);
+    
+    /* Dim Theme */
+    --bg-dim: #15202b;
+    --text-dim: #ffffff;
+    --text-secondary-dim: #8b98a5;
+    --border-dim: #38444d;
+    --button-dim: #ffffff;
+    --button-text-dim: #15202b;
+    --hover-dim: rgba(239, 243, 244, 0.1);
+}
+
+
+
+.tg-container {
+    width: 100%;
+    max-width: 900px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    min-height: 700px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    gap: 20px;
+}
+
+/* Mode Toggle */
+.mode-toggle {
+    background: white;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    align-self: center;
+    gap: 20px;
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    -ms-border-radius: 8px;
+    -o-border-radius: 8px;
+}
+
+.mode-toggle button {
+    padding: 8px 16px;
+    border: 1px solid #00000016;
+    border-radius: 8px;
+    font-size: 15px;
+    min-width: 100px;
+    font-weight: 500;
+    cursor: pointer;
+    background: transparent;
+    transition: background-color 0.2s;
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    -ms-border-radius: 8px;
+    -o-border-radius: 8px;
+}
+
+.mode-toggle button.active {
+    background-color: #0ECF7F;
+    color: var(--button-text-light);
+}
+
+/* Tweet Card */
+.tweet-card {
+    background: var(--bg-light);
+    align-self: center;
+    min-width: 480px;
+    max-width: 480px;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    -ms-border-radius: 8px;
+    -o-border-radius: 8px;
+
+    @media screen and (max-width: 768px) {
+        min-width: 100%;
+        max-width: 100%;
+    }
+}
+
+.profile-section {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.profile-img-container {
+    position: relative;
+    width: 45px;
+    height: 45px;
+    overflow:hidden;
+    border-radius: 50%;
+}
+
+.profile-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+body:not(.preview-mode) .profile-img-container {
+    cursor: pointer;
+}
+
+.upload-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(233, 233, 233, 0.5);
+    cursor: pointer;
+}
+
+body:not(.preview-mode) .upload-overlay {
+    display: flex;
+}
+
+.profile-img-container input[type="file"] {
+    display: none;
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.name-section {
+    display: flex;
+    align-items: center;
+}
+
+.profile-name {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text-light);
+}
+
+.verified-badge-container {
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin: 0 4px;
+}
+
+body:not(.preview-mode) .verified-badge-container {
+    border: 2px dashed var(--border-light);
+    border-radius: 6px;
+    -webkit-border-radius: 6px;
+    -moz-border-radius: 6px;
+    -ms-border-radius: 6px;
+    -o-border-radius: 6px;
+}
+
+body.dark:not(.preview-mode) .verified-badge-container {
+    border-color: var(--border-dark);
+}
+
+body.dim:not(.preview-mode) .verified-badge-container {
+    border-color: var(--border-dim);
+}
+
+
+.verified-badge {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    visibility: visible;
+}
+
+.verified-badge.hidden {
+    visibility: hidden;
+}
+
+.profile-handle {
+    color: var(--text-secondary-light);
+    font-size: 15px;
+    width: fit-content;
+}
+
+.tweet-text {
+    font-size: 15px;
+    line-height: 20px;
+    margin: 0;
+    color: var(--text-light);
+    white-space: pre-wrap;
+}
+
+.image-upload {
+    margin: 12px 0;
+}
+
+.upload-area {
+    border: 3px dashed var(--border-light);
+    border-radius: 8px;
+    background-color: transparent;
+    padding: 32px;
+    text-align: center;
+    position: relative;
+    cursor: pointer;
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    -ms-border-radius: 8px;
+    -o-border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+body:is(.preview-mode) .upload-area {
+    border: none;
+    margin: 0;
+    padding: 0;
+    border-radius: 15px;
+    -webkit-border-radius: 15px;
+    -moz-border-radius: 15px;
+    -ms-border-radius: 15px;
+    -o-border-radius: 15px;
+}
+
+
+.plus-icon {
+    background-color: #F2F2F2;
+    border-radius: 50%;
+    height: 30px;
+    display: flex;
+    padding: 0px;
+    width: 30px;
+    font-family: 'Courier New', Courier, monospace;
+    margin: 0 auto;
+    color: var(--text-secondary-light);
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+    -ms-border-radius: 50%;
+    -o-border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    line-height: 0;
+    vertical-align: center;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.upload-text {
+    color: var(--text-secondary-light);
+    font-size: 15px;
+}
+
+.select-text {
+    color: #0ECF7F;
+    cursor: pointer;
+}
+
+.file-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.tweet-meta {
+    margin: 16px 0;
+    color: var(--text-secondary-light);
+    font-size: 15px;
+}
+
+.tweet-stats {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-top: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-light);
+}
+
+body.dim .count.views {
+    color:white;
+}
+
+body.dark .count.views {
+    color:white;
+}
+
+.stat {
+    display: flex;
+    font-size: 13px;
+    align-items: center;
+    font-family: TwitterChirp, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    gap: 6px;
+    color: var(--text-secondary-light);
+}
+
+.stat svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+.stat {
+    cursor: pointer;
+}
+
+.tweet-actions {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+}
+
+.action-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all 0.2s;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 20px;
+}
+
+.action-btn.comment {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='%23536471' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.action-btn.comment:hover,
+.action-btn.comment.active {
+    background-color: rgba(29, 155, 240, 0.1);
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='%231d9bf0' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.action-btn.retweet {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='%23536471' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4.5 3.88l4.432 4.14-1.364 1.46L5.5 7.55V16c0 1.1.896 2 2 2H13v2H7.5c-2.209 0-4-1.79-4-4V7.55L1.432 9.48.068 8.02 4.5 3.88zM16.5 6H11V4h5.5c2.209 0 4 1.79 4 4v8.45l2.068-1.93 1.364 1.46-4.432 4.14-4.432-4.14 1.364-1.46 2.068 1.93V8c0-1.1-.896-2-2-2z'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.action-btn.retweet:hover,
+.action-btn.retweet.active {
+    background-color: rgba(0, 186, 124, 0.1);
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='%2300ba7c' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4.5 3.88l4.432 4.14-1.364 1.46L5.5 7.55V16c0 1.1.896 2 2 2H13v2H7.5c-2.209 0-4-1.79-4-4V7.55L1.432 9.48.068 8.02 4.5 3.88zM16.5 6H11V4h5.5c2.209 0 4 1.79 4 4v8.45l2.068-1.93 1.364 1.46-4.432 4.14-4.432-4.14 1.364-1.46 2.068 1.93V8c0-1.1-.896-2-2-2z'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.action-btn.like {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='%23536471' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.805 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-1.243.07-2.349.78-2.91 1.91-.552 1.12-.633 2.78.479 4.82 1.074 1.97 3.257 4.27 7.129 6.61 3.87-2.34 6.052-4.64 7.126-6.61 1.111-2.04 1.03-3.7.477-4.82-.561-1.13-1.666-1.84-2.908-1.91zm4.187 7.69c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.86-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.81.846 4.17-.514 6.67z'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.action-btn.like:hover,
+.action-btn.like.active {
+    background-color: rgba(249, 24, 128, 0.1);
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='%23f91880' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.805 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-1.243.07-2.349.78-2.91 1.91-.552 1.12-.633 2.78.479 4.82 1.074 1.97 3.257 4.27 7.129 6.61 3.87-2.34 6.052-4.64 7.126-6.61 1.111-2.04 1.03-3.7.477-4.82-.561-1.13-1.666-1.84-2.908-1.91zm4.187 7.69c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.86-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.81.846 4.17-.514 6.67z'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.action-btn.bookmark {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='%23536471' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 4.5C4 3.12 5.119 2 6.5 2h11C18.881 2 20 3.12 20 4.5v18.44l-8-5.71-8 5.71V4.5zM6.5 4c-.276 0-.5.22-.5.5v14.56l6-4.29 6 4.29V4.5c0-.28-.224-.5-.5-.5h-11z'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.action-btn.bookmark:hover,
+.action-btn.bookmark.active {
+    background-color: rgba(29, 155, 240, 0.1);
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='%231d9bf0' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 4.5C4 3.12 5.119 2 6.5 2h11C18.881 2 20 3.12 20 4.5v18.44l-8-5.71-8 5.71V4.5zM6.5 4c-.276 0-.5.22-.5.5v14.56l6-4.29 6 4.29V4.5c0-.28-.224-.5-.5-.5h-11z'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.action-btn.share {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='%23536471' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 2.59l5.7 5.7-1.41 1.42L13 6.41V16h-2V6.41l-3.3 3.3-1.41-1.42L12 2.59zM21 15l-.02 3.51c0 1.38-1.12 2.49-2.5 2.49H5.5C4.11 21 3 19.88 3 18.5V15h2v3.5c0 .28.22.5.5.5h12.98c.28 0 .5-.22.5-.5L19 15h2z'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.action-btn.share:hover,
+.action-btn.share.active {
+    background-color: rgba(29, 155, 240, 0.1);
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='%231d9bf0' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 2.59l5.7 5.7-1.41 1.42L13 6.41V16h-2V6.41l-3.3 3.3-1.41-1.42L12 2.59zM21 15l-.02 3.51c0 1.38-1.12 2.49-2.5 2.49H5.5C4.11 21 3 19.88 3 18.5V15h2v3.5c0 .28.22.5.5.5h12.98c.28 0 .5-.22.5-.5L19 15h2z'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.action-btn:active {
+    background-color: var(--hover-light);
+}
+
+/* Bottom Controls */
+.bottom-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.theme-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.theme-label {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-light);
+}
+
+.theme-btn {
+    min-width: 80px;
+    min-height: 37px;
+    padding: 8px 16px;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    background: transparent;
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--text-light);
+    transition: all 0.2s;
+}
+
+.theme-btn.active {
+    background-color: #0ECF7F;
+    color: var(--button-text-light);
+    border-color: transparent;
+}
+
+.button-group{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 10px;
+
+    @media screen and (max-width: 768px) {
+        width: 100%;
+    }
+}
+
+
+.download-btn {
+    display: flex;
+    min-height: 37px;
+    min-width: 100px;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px 10px 18px;
+    border: none;
+    border-radius: 8px;
+    background-color: #0ECF7F;
+    color: white;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    -ms-border-radius: 8px;
+    -o-border-radius: 8px;
+
+    @media screen and (max-width: 768px) {
+        width: 100%;
+        flex-grow: 1;
+    }
+}
+
+.download-icon {
+    width: 20px;
+    height: 20px;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 2.59l5.7 5.7-1.41 1.42L13 6.41V16h-2V6.41l-3.3 3.3-1.41-1.42L12 2.59zM21 15l-.02 3.51c0 1.38-1.12 2.49-2.5 2.49H5.5C4.11 21 3 19.88 3 18.5V15h2v3.5c0 .28.22.5.5.5h12.98c.28 0 .5-.22.5-.5L19 15h2z'%3E%3C/path%3E%3C/svg%3E") center/contain no-repeat;
+}
+
+.download-btn:hover {
+    gap: 10px;
+    transition: all 200ms;
+}
+
+/* Theme Classes */
+body.dark .tweet-card {
+    background-color: var(--bg-dark);
+    border-color: var(--border-dark);
+}
+
+body.dark .profile-name,
+body.dark .tweet-text{
+    color: var(--text-dark);
+}
+
+body.dark .profile-handle,
+body.dark .upload-text,
+body.dark .tweet-meta,
+body.dark .tweet-stats {
+    color: var(--text-secondary-dark);
+}
+
+body.dark .upload-area {
+    border-color: var(--border-dark);
+}
+
+body.dark .tweet-stats {
+    border-color: var(--border-dark);
+}
+
+body.dark .action-btn {
+    filter: invert(1);
+}
+
+
+body.dim .tweet-card {
+    background-color: var(--bg-dim);
+    border-color: var(--border-dim);
+}
+
+body.dim .profile-name,
+body.dim .tweet-text {
+    color: var(--text-dim);
+}
+
+body.dim .profile-handle,
+body.dim .upload-text,
+body.dim .tweet-meta,
+body.dim .tweet-stats {
+    color: var(--text-secondary-dim);
+}
+
+body.dim .upload-area {
+    border-color: var(--border-dim);
+}
+
+body.dim .tweet-stats {
+    border-color: var(--border-dim);
+}
+
+
+
+body.dim .action-btn {
+    filter: invert(1);
+}
+
+
+[contenteditable] {
+    background-color: #f1f1f1;
+    border-radius: 4px;
+    padding: 2px 6px;
+}
+
+body.dark [contenteditable] {
+    background-color: #16181c;
+}
+
+body.dark [contenteditable]:focus {
+    background-color: #1d1f23;
+}
+
+body.dim [contenteditable] {
+    background-color: #1c2732;
+}
+
+body.dim [contenteditable]:focus {
+    background-color: #22303d;
+}
+
+[contenteditable]:focus {
+    outline: none;
+    background-color: #e5e5e5;
+}
+
+.verified-badge {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.verified-dropdown {
+    position: absolute;
+    background: white;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: none;
+    z-index: 100;
+    padding: 8px 0;
+}
+
+.verified-dropdown.show {
+    display: block;
+}
+
+.verified-option {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    cursor: pointer;
+    gap: 8px;
+}
+
+.verified-option:hover {
+    background-color: var(--hover-light);
+}
+
+.verified-option img {
+    width: 20px;
+    height: 20px;
+}
+
+/* Bottom bar redesign */
+.bottom-controls {
+    background: white;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    -ms-border-radius: 8px;
+    -o-border-radius: 8px;
+}
+.pc-mobile-toggle {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin: auto;
+}
+
+.toggle-label {
+    font-size: 15px;
+    padding-right: 5px;
+    font-weight: 500;
+    color: var(--text-light);
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    margin-top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #cfd9de;
+    transition: .2s;
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .2s;
+}
+
+input:checked + .slider {
+    background-color: #0ECF7F;
+}
+
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
+
+.profile-name,
+.profile-handle,
+.timestamp,
+.count {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+</style>
+<body class="light">
+    <div class="tg-container">
+        <div class="mode-toggle">
+            <button class="edit-btn active">Edit</button>
+            <button class="preview-btn">Preview</button>
+        </div>
+
+        <div class="tweet-card">
+            <div class="tweet-header">
+                <div class="profile-section">
+                    <div class="profile-img-container">
+                        <svg class="profile-img" xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+                            <path d="M 185.500 90.411 C 166.178 94.190, 151.392 103.962, 140.965 119.845 C 131.943 133.587, 127.122 149.614, 124.973 173 C 121.013 216.111, 134.249 241.766, 164.424 249.469 C 183.160 254.252, 216.840 254.252, 235.576 249.469 C 265.751 241.766, 278.987 216.111, 275.027 173 C 272.171 141.912, 263.493 120.761, 247.744 106.505 C 240.858 100.271, 228.901 93.903, 219.500 91.462 C 211.030 89.263, 194.054 88.739, 185.500 90.411 M 184.866 278.966 C 134.522 285.389, 91.652 321.729, 75.115 372 C 72.305 380.543, 69 394.912, 69 398.588 C 69 399.797, 87.849 400, 200 400 C 312.151 400, 331 399.797, 331 398.588 C 331 397.811, 330.327 393.649, 329.505 389.338 C 324.253 361.799, 308.721 333.313, 288.547 314.216 C 264.680 291.624, 236.529 279.685, 204.500 278.571 C 197.350 278.323, 188.515 278.500, 184.866 278.966" 
+                                  fill="#647484" 
+                                  fill-rule="evenodd"/>
+                            <path d="M 0 200 L 0 400 34.319 400 L 68.638 400 70.285 390.750 C 75.179 363.262, 88.834 337.226, 109 316.934 C 128.309 297.504, 149.160 286.146, 176.053 280.410 C 187.742 277.917, 212.258 277.917, 223.947 280.410 C 249.163 285.789, 270.078 296.734, 288.547 314.216 C 309.178 333.745, 324.706 362.616, 329.718 390.763 L 331.367 400.025 365.933 399.763 L 400.500 399.500 400.752 199.750 L 401.005 0 200.502 0 L 0 0 0 200 M 0.490 200.500 C 0.490 310.500, 0.607 355.352, 0.750 300.170 C 0.893 244.989, 0.893 154.989, 0.750 100.170 C 0.607 45.352, 0.490 90.500, 0.490 200.500 M 185.500 90.411 C 166.178 94.190, 151.392 103.962, 140.965 119.845 C 131.943 133.587, 127.122 149.614, 124.973 173 C 121.013 216.111, 134.249 241.766, 164.424 249.469 C 183.160 254.252, 216.840 254.252, 235.576 249.469 C 265.751 241.766, 278.987 216.111, 275.027 173 C 272.171 141.912, 263.493 120.761, 247.744 106.505 C 240.858 100.271, 228.901 93.903, 219.500 91.462 C 211.030 89.263, 194.054 88.739, 185.500 90.411" 
+                                  fill="#cbd3db" 
+                                  fill-rule="evenodd"/>
+                        </svg>
+                        <label class="upload-overlay">
+                            <svg width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3.75 10.5V16.75C3.75 17.1644 3.91462 17.5618 4.20765 17.8549C4.50067 18.1479 4.8981 18.3125 5.3125 18.3125H14.6875C15.1019 18.3125 15.4993 18.1479 15.7924 17.8549C16.0854 17.5618 16.25 17.1644 16.25 16.75V10.5" stroke="black" stroke-opacity="0.75" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M13.125 5.8125L10 2.6875L6.875 5.8125" stroke="black" stroke-opacity="0.75" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M10 2.6875V12.8438" stroke="black" stroke-opacity="0.75" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>                                
+                            <input type="file" accept="image/*">
+                        </label>
+                    </div>
+                    <div class="profile-info">
+                        <div class="name-section">
+                            <span class="profile-name" contenteditable="true">Social Plug Tweet Generator</span>
+                            <div class="verified-badge-container">
+                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231DA1F2'%3E%3Cpath d='M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.818-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.437 2.25c-.415-.165-.866-.25-1.336-.25-2.11 0-3.818 1.79-3.818 4 0 .494.083.964.237 1.4-1.272.65-2.147 2.018-2.147 3.6 0 1.495.782 2.798 1.942 3.486-.02.17-.032.34-.032.514 0 2.21 1.708 4 3.818 4 .47 0 .92-.086 1.335-.25.62 1.334 1.926 2.25 3.437 2.25 1.512 0 2.818-.916 3.437-2.25.415.163.865.248 1.336.248 2.11 0 3.818-1.79 3.818-4 0-.174-.012-.344-.033-.513 1.158-.687 1.943-1.99 1.943-3.484zm-6.616-3.334l-4.334 6.5c-.145.217-.382.334-.625.334-.143 0-.288-.04-.416-.126l-.115-.094-2.415-2.415c-.293-.293-.293-.768 0-1.06s.768-.294 1.06 0l1.77 1.767 3.825-5.74c.23-.345.696-.436 1.04-.207.346.23.44.696.21 1.04z'/%3E%3C/svg%3E" class="verified-badge" alt="Verified">
+                            </div>
+                            <div class="verified-dropdown">
+                                <div class="verified-option" data-type="none">
+                                    <span>No Tick</span>
+                                </div>
+                                <div class="verified-option" data-type="blue">
+                                    <span>Blue Tick</span>
+                                </div>
+                                <div class="verified-option" data-type="gold">
+                                    <span>Gold Tick</span>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="profile-handle" contenteditable="true">@socialplug</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tweet-content">
+                <div class="tweet-text" contenteditable="true">Hey there, welcome to the Tweet Generator!
+
+• You can edit anything you want by clicking on it
+• Move to the preview mode from the top bar
+• Check the preview & download your image in one-click</div>
+                
+                <div class="image-upload">
+                    <div class="upload-area">
+                        <div class="plus-icon">
+                            +
+                        </div>
+                        <span class="upload-text">Drop your image here, or <span class="select-text">select one</span></span>
+                        <input type="file" class="file-input" accept="image/*">
+                    </div>
+                </div>
+
+                <div class="tweet-meta">
+                    <span class="timestamp" contenteditable="true">11:25 AM</span> · <span class="timestamp" contenteditable="true">Jan 02 2025</span>
+                    <span class="views"> · <span class="count views" type="number" pattern="[0-9]*" inputmode="numeric" style="font-weight: 700;" contenteditable="true">120</span> Views</span>
+                </div>
+
+                <div class="tweet-stats">
+                    <div class="stat">
+                        <svg viewBox="0 0 24 24"><path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z"></path></svg>
+                        <span class="count" contenteditable="true" type="number" pattern="[0-9]*" inputmode="numeric">2</span>
+                    </div>
+                    <div class="stat">
+                        <svg viewBox="0 0 24 24"><path d="M4.5 3.88l4.432 4.14-1.364 1.46L5.5 7.55V16c0 1.1.896 2 2 2H13v2H7.5c-2.209 0-4-1.79-4-4V7.55L1.432 9.48.068 8.02 4.5 3.88zM16.5 6H11V4h5.5c2.209 0 4 1.79 4 4v8.45l2.068-1.93 1.364 1.46-4.432 4.14-4.432-4.14 1.364-1.46 2.068 1.93V8c0-1.1-.896-2-2-2z"></path></svg>
+                        <span class="count" contenteditable="true" type="number" pattern="[0-9]*" inputmode="numeric">215</span>
+                    </div>
+                    <div class="stat">
+                        <svg viewBox="0 0 24 24"><path d="M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.805 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-1.243.07-2.349.78-2.91 1.91-.552 1.12-.633 2.78.479 4.82 1.074 1.97 3.257 4.27 7.129 6.61 3.87-2.34 6.052-4.64 7.126-6.61 1.111-2.04 1.03-3.7.477-4.82-.561-1.13-1.666-1.84-2.908-1.91zm4.187 7.69c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.86-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.81.846 4.17-.514 6.67z"></path></svg>
+                        <span class="count" contenteditable="true" type="number" pattern="[0-9]*" inputmode="numeric">693</span>
+                    </div>
+                    <div class="stat">
+                        <svg viewBox="0 0 24 24"><path d="M4 4.5C4 3.12 5.119 2 6.5 2h11C18.881 2 20 3.12 20 4.5v18.44l-8-5.71-8 5.71V4.5zM6.5 4c-.276 0-.5.22-.5.5v14.56l6-4.29 6 4.29V4.5c0-.28-.224-.5-.5-.5h-11z"></path></svg>
+                        <span class="count" contenteditable="true" type="number" pattern="[0-9]*" inputmode="numeric">10</span>
+                    </div>
+                    <div class="stat">
+                        <svg viewBox="0 0 24 24"><path d="M12 2.59l5.7 5.7-1.41 1.42L13 6.41V16h-2V6.41l-3.3 3.3-1.41-1.42L12 2.59zM21 15l-.02 3.51c0 1.38-1.12 2.49-2.5 2.49H5.5C4.11 21 3 19.88 3 18.5V15h2v3.5c0 .28.22.5.5.5h12.98c.28 0 .5-.22.5-.5L19 15h2z"></path></svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-controls">
+            <div class="theme-selector">
+                <span class="theme-label">Theme:</span>
+                <button class="theme-btn light active">Light</button>
+                <button class="theme-btn dark">Dark</button>
+                <button class="theme-btn dim">Dim</button>
+            </div>
+            <div class="button-group">
+                <div class="pc-mobile-toggle">
+                    <span class="toggle-label">PC/Mobile</span>
+                    <label class="switch">
+                        <input type="checkbox" id="viewToggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            <button class="download-btn">
+                <svg width="18" height="19" viewBox="0 0 18 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M10.2448 4.4659L10.3992 10.2153C10.6765 10.2221 10.9195 10.2307 11.1318 10.2403C11.8237 10.2717 12.1056 10.9226 11.6429 11.4379C11.4434 11.6601 11.2012 11.9192 10.9086 12.2174C10.3095 12.828 9.85144 13.1922 9.53434 13.4067C9.20352 13.6305 8.79549 13.6305 8.46467 13.4067C8.1476 13.1922 7.68952 12.828 7.09039 12.2174C6.79755 11.919 6.55524 11.6599 6.35574 11.4376C5.89311 10.9224 6.17497 10.2717 6.86667 10.2403C7.07926 10.2307 7.32244 10.2221 7.60006 10.2153L7.75431 4.46603C7.76646 4.01395 8.06892 3.61898 8.51896 3.57407C8.66505 3.55948 8.82706 3.5498 8.99972 3.5498C9.17234 3.5498 9.33428 3.55948 9.48037 3.57406C9.93029 3.61896 10.2327 4.01388 10.2448 4.4659ZM12.7853 10.2438C12.5351 9.66038 12.0059 9.31319 11.4227 9.21687L11.37 7.25326C12.6672 7.28595 13.6519 7.34205 14.3543 7.39557C15.4033 7.47547 16.2702 8.23578 16.3863 9.32127C16.4609 10.0193 16.5246 10.9968 16.5246 12.2998C16.5246 13.6029 16.4609 14.5804 16.3863 15.2784C16.2702 16.3639 15.4033 17.1242 14.3543 17.2041C13.2739 17.2864 11.5255 17.3748 8.99961 17.3748C6.47376 17.3748 4.72527 17.2864 3.64495 17.2041C2.59587 17.1242 1.72899 16.3639 1.61296 15.2784C1.53834 14.5804 1.47461 13.6029 1.47461 12.2998C1.47461 10.9968 1.53834 10.0193 1.61296 9.32127C1.72899 8.23578 2.59587 7.47547 3.64495 7.39557C4.34727 7.34205 5.33199 7.28595 6.62913 7.25326L6.57646 9.21679C5.99318 9.3129 5.46366 9.66007 5.21334 10.2436C4.92662 10.9119 5.11751 11.6304 5.57444 12.1392C5.78507 12.3738 6.03805 12.6443 6.34094 12.9529C6.98053 13.6046 7.49181 14.0163 7.87628 14.2764C8.56246 14.7406 9.43634 14.7407 10.1226 14.2765C10.5072 14.0163 11.0185 13.6047 11.658 12.9528C11.9607 12.6444 12.2136 12.374 12.4241 12.1395C12.8811 11.6306 13.0719 10.9121 12.7853 10.2438Z" fill="white"/>
+                    </svg>
+                Download
+            </button>
+        </div>
+        </div>
+    </div>
+    <script>
+
+
+
+
+
+const verifiedBadgeContainer = document.querySelector('.verified-badge-container');
+const verifiedBadge = document.querySelector('.verified-badge');
+const verifiedDropdown = document.querySelector('.verified-dropdown');
+const verifiedOptions = document.querySelectorAll('.verified-option');
+
+const profileImgContainer = document.querySelector('.profile-img-container');
+const profileImg = profileImgContainer.querySelector('.profile-img');
+const profileInput = profileImgContainer.querySelector('input[type="file"]');
+let defaultProfileSrc = profileImg.src;
+const profileImgSVG = document.querySelector('.profile-img');
+
+
+
+document.querySelectorAll('.profile-name, .profile-handle, .timestamp, .count').forEach(element => {
+    element.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.keyCode === 13) {
+            event.target.blur();
+        }
+    });
+});
+
+//profile pic
+profileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            // Create new image element
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.classList.add('profile-img');
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+            
+            // Store the original SVG for potential reset
+            if (!profileImgContainer.dataset.originalSvg) {
+                profileImgContainer.dataset.originalSvg = profileImgContainer.innerHTML;
+            }
+            
+            // Replace existing content
+            while (profileImgContainer.firstChild) {
+                profileImgContainer.removeChild(profileImgContainer.firstChild);
+            }
+            
+            profileImgContainer.appendChild(img);
+            
+            // Add back the input element
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        img.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            profileImgContainer.appendChild(input);
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+
+
+verifiedBadgeContainer.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const rect = verifiedBadgeContainer.getBoundingClientRect();
+    verifiedDropdown.style.top = `${rect.bottom + 5}px`;
+    verifiedDropdown.style.left = `${rect.left}px`;
+    verifiedDropdown.classList.toggle('show');
+    
+    verifiedDropdown.classList.remove('dark', 'dim');
+    if (document.body.classList.contains('dark')) {
+        verifiedDropdown.classList.add('dark');
+    } else if (document.body.classList.contains('dim')) {
+        verifiedDropdown.classList.add('dim');
+    }
+});
+
+document.addEventListener('click', (e) => {
+    if (!verifiedDropdown.contains(e.target)) {
+        verifiedDropdown.classList.remove('show');
+    }
+});
+
+
+
+function createVerifiedBadge(type) {
+    const verifiedContainer = document.querySelector('.verified-badge-container');
+    
+    while (verifiedContainer.firstChild) {
+        verifiedContainer.removeChild(verifiedContainer.firstChild);
+    }
+    
+    if (type === 'blue') {
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('fill', '#1DA1F2');
+        svg.classList.add('verified-badge');
+        
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute('d', 'M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.818-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.437 2.25c-.415-.165-.866-.25-1.336-.25-2.11 0-3.818 1.79-3.818 4 0 .494.083.964.237 1.4-1.272.65-2.147 2.018-2.147 3.6 0 1.495.782 2.798 1.942 3.486-.02.17-.032.34-.032.514 0 2.21 1.708 4 3.818 4 .47 0 .92-.086 1.335-.25.62 1.334 1.926 2.25 3.437 2.25 1.512 0 2.818-.916 3.437-2.25.415.163.865.248 1.336.248 2.11 0 3.818-1.79 3.818-4 0-.174-.012-.344-.033-.513 1.158-.687 1.943-1.99 1.943-3.484zm-6.616-3.334l-4.334 6.5c-.145.217-.382.334-.625.334-.143 0-.288-.04-.416-.126l-.115-.094-2.415-2.415c-.293-.293-.293-.768 0-1.06s.768-.294 1.06 0l1.77 1.767 3.825-5.74c.23-.345.696-.436 1.04-.207.346.23.44.696.21 1.04z');
+        
+        svg.appendChild(path);
+        verifiedContainer.appendChild(svg);
+    } else if (type === 'gold') {
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute('viewBox', '0 0 22 22');
+        svg.setAttribute('class', 'verified-badge');
+        
+        const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+        
+        // First gradient (outer)
+        const gradient1 = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+        gradient1.setAttribute('id', 'gradient1');
+        gradient1.setAttribute('gradientUnits', 'userSpaceOnUse');
+        gradient1.setAttribute('x1', '4.411');
+        gradient1.setAttribute('x2', '18.083');
+        gradient1.setAttribute('y1', '2.495');
+        gradient1.setAttribute('y2', '21.508');
+        
+        const stops1 = [
+            ['0', '#f4e72a'],
+            ['0.539', '#cd8105'],
+            ['0.68', '#cb7b00'],
+            ['1', '#f4ec26'],
+            ['1', '#f4e72a']
+        ];
+        
+        stops1.forEach(([offset, color]) => {
+            const stop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+            stop.setAttribute('offset', offset);
+            stop.setAttribute('stop-color', color);
+            gradient1.appendChild(stop);
+        });
+        
+        defs.appendChild(gradient1);
+        svg.appendChild(defs);
+        
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute('fill-rule', 'evenodd');
+        path.setAttribute('clip-rule', 'evenodd');
+ 
+        path.setAttribute('d', `
+            M13.324 3.848L11 1.6 8.676 3.848l-3.201-.453-.559 3.184L2.06 8.095 3.48 11l-1.42 2.904 
+            2.856 1.516.559 3.184 3.201-.452L11 20.4l2.324-2.248 3.201.452.559-3.184 2.856-1.516L18.52 11l1.42-2.905-2.856-1.516-.559-3.184z
+            M 14.684 7.166l-4.334 6.5c-.145.217-.382.334-.625.334-.143 0-.288-.04-.416-.126l-.115-.094-2.415-2.415c-.293-.293-.293-.768 0-1.06s.768-.294 1.06 0l1.77 1.767 3.825-5.74
+        `);
+        path.setAttribute('fill', 'url(#gradient1)');
+        
+        svg.appendChild(path);
+        verifiedContainer.appendChild(svg);
+    }
+    
+    verifiedContainer.classList.remove('hidden');
+}
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    createVerifiedBadge('blue');
+});
+
+
+verifiedOptions.forEach(option => {
+    option.addEventListener('click', () => {
+        const type = option.dataset.type;
+        const verifiedContainer = document.querySelector('.verified-badge-container');
+        
+        if (type === 'none') {
+            verifiedContainer.classList.add('hidden');
+            while (verifiedContainer.firstChild) {
+                verifiedContainer.removeChild(verifiedContainer.firstChild);
+            }
+        } else {
+            createVerifiedBadge(type);
+        }
+        verifiedDropdown.classList.remove('show');
+    });
+});
+
+const actionButtons = document.querySelectorAll('.stat');
+actionButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        button.classList.toggle('active');
+    });
+});
+
+function getStatIndex(type) {
+    switch(type) {
+        case 'comment': return 1;
+        case 'retweet': return 2;
+        case 'like': return 3;
+        case 'bookmark': return 4;
+        default: return 0;
+    }
+}
+
+const profileHandle = document.querySelector('.profile-handle');
+profileHandle.addEventListener('input', (e) => {
+    let text = e.target.textContent;
+    if (!text.includes('@')) {
+        e.target.textContent = '@' + text;
+    } else if (!text.startsWith('@')) {
+        e.target.textContent = '@' + text.replace('@', '');
+    }
+
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(e.target);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+});
+
+
+const themeButtons = document.querySelectorAll('.theme-btn');
+const body = document.body;
+
+themeButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        const theme = button.classList.contains('light') ? 'light' 
+                   : button.classList.contains('dark') ? 'dark' 
+                   : 'dim';
+        
+        themeButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        
+        body.classList.remove('light', 'dark', 'dim');
+        body.classList.add(theme);
+    });
+});
+
+const editButton = document.querySelector('.edit-btn');
+const previewButton = document.querySelector('.preview-btn');
+const editableElements = document.querySelectorAll('[contenteditable="true"]');
+const imageUpload = document.querySelector('.image-upload');
+
+function togglePreviewMode(isPreview) {
+    document.body.classList.toggle('preview-mode', isPreview);
+    editButton.classList.toggle('active', !isPreview);
+    previewButton.classList.toggle('active', isPreview);
+    
+    editableElements.forEach(element => {
+        element.contentEditable = isPreview ? 'false' : 'true';
+        element.style.backgroundColor = isPreview ? 'transparent' : '';
+        element.style.padding = isPreview ? '0' : '';
+    });
+    
+    if (isPreview) {
+        const viewsCount = document.querySelector('.count.views');
+        const value = parseInt(viewsCount?.textContent) || 0;
+        const viewsSpan = document.querySelector('.views');
+        viewsSpan.style.display = value === 0 ? 'none' : '';
+    } else {
+        // In edit mode, always show views
+        const viewsSpan = document.querySelector('.views');
+        viewsSpan.style.display = '';
+    }
+    
+    const hasImage = uploadArea.querySelector('img');
+    if (!hasImage) {
+        uploadArea.style.display = isPreview ? 'none' : 'block';
+    }
+    imageUpload.style.pointerEvents = isPreview ? 'none' : 'auto';
+}
+
+document.querySelectorAll('.count').forEach(countElement => {
+    countElement.addEventListener('blur', (e) => {
+        const formattedValue = formatNumber(e.target.textContent);
+        e.target.textContent = formattedValue;
+        
+        if (document.body.classList.contains('preview-mode') && e.target.classList.contains('views')) {
+            const value = parseInt(formattedValue) || 0;
+            const viewsSpan = document.querySelector('.views');
+            viewsSpan.style.display = value === 0 ? 'none' : '';
+        }
+    });
+});
+
+editButton.addEventListener('click', () => togglePreviewMode(false));
+previewButton.addEventListener('click', () => togglePreviewMode(true));
+
+const fileInput = document.querySelector('.file-input');
+const uploadArea = document.querySelector('.upload-area');
+const plusIcon = document.querySelector('.plus-icon');
+const uploadText = document.querySelector('.upload-text');
+
+fileInput.addEventListener('change', handleFileSelect);
+uploadArea.addEventListener('dragover', handleDragOver);
+uploadArea.addEventListener('drop', handleDrop);
+
+function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (file) {
+        displayImage(file);
+    }
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+        displayImage(file);
+    }
+}
+
+function displayImage(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        img.style.maxWidth = '100%';
+        img.style.borderRadius = '16px';
+        
+        plusIcon.style.display = 'none';
+        uploadText.style.display = 'none';
+        
+        Array.from(uploadArea.children)
+            .filter(child => child.tagName === 'IMG')
+            .forEach(img => img.remove());
+        
+        uploadArea.appendChild(img);
+        uploadArea.style.padding = '0';
+        uploadArea.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+async function handleTweetDownload() {
+    try {
+        showToast('Preparing the tweet...');
+        
+        const tweetCard = document.querySelector('.tweet-card');
+        const wasPreviewMode = document.body.classList.contains('preview-mode');
+
+        if (!wasPreviewMode) {
+            togglePreviewMode(true);
+        }
+
+        const canvas = await html2canvas(tweetCard, {
+            backgroundColor: null,
+            scale: 4,
+            logging: false,
+            allowTaint: true,
+            useCORS: true,
+            onclone: (clonedDoc) => {
+                const clonedUploadArea = clonedDoc.querySelector('.upload-area');
+                if (clonedUploadArea && clonedUploadArea.querySelector('img')) {
+                    clonedUploadArea.style.display = 'block';
+                    clonedUploadArea.style.padding = '0';
+                }
+
+                clonedDoc.querySelectorAll('.tweet-card *').forEach(el => {
+                    el.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+                });
+
+                const body = clonedDoc.body;
+                const tweetCard = clonedDoc.querySelector('.tweet-card');
+                
+                if (body.classList.contains('dark')) {
+                    tweetCard.style.backgroundColor = 'rgb(0, 0, 0)';
+                } else if (body.classList.contains('dim')) {
+                    tweetCard.style.backgroundColor = 'rgb(21, 32, 43)';
+                } else {
+                    tweetCard.style.backgroundColor = 'rgb(255, 255, 255)';
+                }
+            }
+        });
+
+        // Check if running on iOS Safari
+        const isIOSSafari = /iPad|iPhone|iPod/.test(navigator.userAgent) && 
+                           !window.MSStream && 
+                           /Safari/.test(navigator.userAgent) &&
+                           !/Chrome/.test(navigator.userAgent);
+
+        if (isIOSSafari) {
+            // For iOS Safari, force download using binary data
+            canvas.toBlob(async (blob) => {
+                try {
+                    // Convert blob to base64
+                    const reader = new FileReader();
+                    reader.onloadend = function() {
+                        // Create link with base64 data
+                        const link = document.createElement('a');
+                        link.href = reader.result;
+                        link.download = `tweet_${Date.now()}.png`; // Add timestamp to prevent caching
+                        link.setAttribute('target', '_blank'); // Force new tab
+                        link.setAttribute('rel', 'noopener noreferrer');
+                        
+                        // Add to DOM and click
+                        document.body.appendChild(link);
+                        link.click();
+                        
+                        // Cleanup
+                        setTimeout(() => {
+                            document.body.removeChild(link);
+                            showToast('Tweet ready to download!');
+                        }, 100);
+                    };
+                    reader.readAsDataURL(blob);
+                } catch (err) {
+                    console.error('Safari download error:', err);
+                    showToast('Please try downloading again');
+                }
+            }, 'image/png', 1.0);
+        } else {
+            // For other browsers, use standard Blob approach
+            canvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.style.display = 'none';
+                link.href = url;
+                link.download = 'tweet.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                showToast('Tweet downloaded!');
+            }, 'image/png', 1.0);
+        }
+
+        if (!wasPreviewMode) {
+            togglePreviewMode(false);
+        }
+
+    } catch (err) {
+        console.error('Failed to download:', err);
+        showToast('Failed to download. Please try again.');
+
+        if (!wasPreviewMode) {
+            togglePreviewMode(false);
+        }
+    }
+}
+
+// Add event listener to download button
+const downloadButton = document.querySelector('.download-btn');
+downloadButton.addEventListener('click', handleTweetDownload);
+function showToast(message) {
+    // Remove any existing toast first
+    const existingToast = document.querySelector('.toast-message');
+    if (existingToast) {
+        existingToast.remove();
+    }
+
+    // Create new toast
+    const toast = document.createElement('div');
+    toast.className = 'toast-message';
+    
+    Object.assign(toast.style, {
+        position: 'fixed',
+        bottom: '20px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        backgroundColor: '#0DCF7F',
+        color: 'white',
+        padding: '12px 24px',
+        borderRadius: '8px',
+        fontSize: '14px',
+        fontWeight: '500',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+        zIndex: '1000',
+        opacity: '0',
+        transition: 'opacity 0.3s'
+    });
+    
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    // Show toast
+    requestAnimationFrame(() => toast.style.opacity = '1');
+    
+    // Hide and remove toast
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Load html2canvas library
+function loadHtml2Canvas() {
+    return new Promise((resolve, reject) => {
+        if (window.html2canvas) {
+            resolve();
+            return;
+        }
+        
+        const script = document.createElement('script');
+        script.src = 'https://html2canvas.hertzen.com/dist/html2canvas.min.js';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
+// Event handler functions
+function handleCountInput(e) {
+    if (e.type === 'blur') {
+        let value = e.target.textContent.replace(/[^0-9]/g, '');
+        value = parseInt(value) || 0;
+
+        if (value === 0) {
+            e.target.textContent = '';
+        } else {
+            if (value >= 1000000) {
+                e.target.textContent = (value / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+            } else if (value >= 1000) {
+                e.target.textContent = (value / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+            } else {
+                e.target.textContent = value.toString();
+            }
+        }
+
+        if (document.body.classList.contains('preview-mode') && e.target.classList.contains('views')) {
+            const viewsSpan = document.querySelector('.views');
+            viewsSpan.style.display = value === 0 ? 'none' : '';
+        }
+    }
+
+    if (e.type === 'focus') {
+        let value = e.target.textContent;
+        if (!value.trim()) {
+            e.target.textContent = '0';
+        } else {
+            if (value.includes('K')) {
+                value = parseFloat(value) * 1000;
+            } else if (value.includes('M')) {
+                value = parseFloat(value) * 1000000;
+            }
+            e.target.textContent = parseInt(value);
+        }
+    }
+}
+
+// Attach event listeners
+document.querySelectorAll('.count').forEach(el => {
+    el.addEventListener('blur', handleCountInput);
+    el.addEventListener('focus', handleCountInput);
+    el.addEventListener('beforeinput', (e) => {
+        if (!/^\d*$/.test(e.data) && e.data !== null) e.preventDefault();
+    });
+    if (el.textContent.trim() === '0') el.textContent = '';
+});
+
+// Handle profile elements and prevent line breaks
+document.querySelectorAll('.profile-name, .profile-handle, .timestamp, .count').forEach(el => {
+    el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') e.target.blur();
+    });
+});
+
+// Special handling for profile handle
+document.querySelector('.profile-handle').addEventListener('input', (e) => {
+    let text = e.target.textContent;
+    if (!text.startsWith('@')) {
+        e.target.textContent = '@' + text.replace('@', '');
+    }
+});
+
+
+
+
+function updateTimestamps() {
+    const now = new Date();
+    const timestamps = document.querySelectorAll('.timestamp');
+    
+    const timeString = now.toLocaleString('en-US', { 
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true 
+    });
+    
+    const dateString = now.toLocaleString('en-US', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric'
+    });
+    
+    timestamps[0].textContent = timeString;
+    timestamps[1].textContent = dateString;
+}
+
+
+updateTimestamps();
+
+const viewToggle = document.getElementById('viewToggle');
+const tweetStats = document.querySelector('.tweet-stats');
+
+// Function to update borders based on current theme and toggle state
+function updateBorders() {
+    if (viewToggle.checked) {
+        tweetStats.style.borderTop = 'none';
+        tweetStats.style.borderBottom = 'none';
+        tweetStats.style.padding = '0';
+    } else {
+        const borderColor = document.body.classList.contains('dark') ? 'var(--border-dark)' : 
+                           document.body.classList.contains('dim') ? 'var(--border-dim)' : 
+                           'var(--border-light)';
+        tweetStats.style.borderTop = `1px solid ${borderColor}`;
+        tweetStats.style.borderBottom = `1px solid ${borderColor}`;
+        tweetStats.style.padding = '12px 0';
+    }
+}
+
+viewToggle.addEventListener('change', updateBorders);
+themeButtons.forEach(btn => btn.addEventListener('click', updateBorders));
+
+loadHtml2Canvas().catch(console.error);
+    </script>
+</body>
+</html>
