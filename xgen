@@ -1208,6 +1208,21 @@ async function handleTweetDownload() {
             allowTaint: true,
             useCORS: true,
             onclone: (clonedDoc) => {
+                // Handle verified badge
+                const verifiedBadgeContainer = clonedDoc.querySelector('.verified-badge-container');
+                if (verifiedBadgeContainer) {
+                    verifiedBadgeContainer.style.border = 'none';
+                    const verifiedBadge = verifiedBadgeContainer.querySelector('.verified-badge');
+                    if (verifiedBadge) {
+                        verifiedBadge.style.width = '20px';
+                        verifiedBadge.style.height = '20px';
+                        verifiedBadge.style.display = 'inline-block';
+                        verifiedBadge.style.visibility = 'visible';
+                        verifiedBadge.style.opacity = '1';
+                    }
+                }
+
+                // Handle upload area
                 const clonedUploadArea = clonedDoc.querySelector('.upload-area');
                 if (clonedUploadArea && !clonedUploadArea.querySelector('img')) {
                     clonedUploadArea.style.display = 'none';
@@ -1222,7 +1237,15 @@ async function handleTweetDownload() {
                                'rgb(255, 255, 255)';
                                
                 tweetCard.style.backgroundColor = bgColor;
-            }
+
+                // Force repaint for Safari
+                tweetCard.style.transform = 'translateZ(0)';
+                tweetCard.style.webkitTransform = 'translateZ(0)';
+            },
+            foreignObjectRendering: false,
+            removeContainer: true,
+            imageTimeout: 0,
+            async: true
         });
 
         // Safari-specific handling
@@ -1230,7 +1253,6 @@ async function handleTweetDownload() {
         
         if (isSafari) {
             canvas.toBlob(function(blob) {
-                // Convert blob to base64
                 const reader = new FileReader();
                 reader.onloadend = function() {
                     const base64data = reader.result;
@@ -1238,16 +1260,16 @@ async function handleTweetDownload() {
                     link.href = base64data;
                     link.download = `tweet_${Date.now()}.png`;
                     
-                    // For iOS Safari specifically
                     if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
-                        link.target = '_blank';
-                        link.rel = 'noopener noreferrer';
+                        window.open(base64data);
+                        showToast('Image opened in new tab. Long press to save.');
+                        if (!wasPreviewMode) togglePreviewMode(false);
+                        return;
                     }
                     
                     document.body.appendChild(link);
                     link.click();
                     
-                    // Cleanup after a delay
                     setTimeout(() => {
                         document.body.removeChild(link);
                         showToast('Tweet downloaded!');
@@ -1256,7 +1278,6 @@ async function handleTweetDownload() {
                 reader.readAsDataURL(blob);
             }, 'image/png', 1.0);
         } else {
-            // For non-Safari browsers
             const imgData = canvas.toDataURL('image/png');
             const link = document.createElement('a');
             link.href = imgData;
