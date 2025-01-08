@@ -1213,19 +1213,6 @@ async function handleTweetDownload() {
                     clonedUploadArea.style.display = 'none';
                 }
 
-                // Ensure verified badge is visible
-                const verifiedBadge = clonedDoc.querySelector('.verified-badge');
-                if (verifiedBadge) {
-                    verifiedBadge.style.cssText = `
-                        width: 20px !important;
-                        height: 20px !important;
-                        display: inline-block !important;
-                        vertical-align: middle !important;
-                        visibility: visible !important;
-                        opacity: 1 !important;
-                    `;
-                }
-
                 // Set background color based on theme
                 const body = clonedDoc.body;
                 const tweetCard = clonedDoc.querySelector('.tweet-card');
