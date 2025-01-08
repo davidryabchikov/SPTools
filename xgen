@@ -171,10 +171,16 @@ body:not(.preview-mode) .upload-overlay {
     color: var(--text-light);
 }
 
+.verified-badge {
+    width: 16px;
+    height: 16px;
+    display: flex;
+}
+
 .verified-badge-container {
     width: 20px;
     height: 20px;
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
@@ -199,12 +205,7 @@ body.dim:not(.preview-mode) .verified-badge-container {
 }
 
 
-.verified-badge {
-    width: 16px;
-    height: 16px;
-    display: inline-block;
-    visibility: visible;
-}
+
 
 .verified-badge.hidden {
     visibility: hidden;
@@ -755,9 +756,9 @@ input:checked + .slider:before {
                     </div>
                     <div class="profile-info">
                         <div class="name-section">
-                            <span class="profile-name" contenteditable="true">Social Plug Tweet Generator</span>
+                            <span class="profile-name" contenteditable="true">SocialPlug Tweet Generator</span>
                             <div class="verified-badge-container">
-                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231DA1F2'%3E%3Cpath d='M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.818-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.437 2.25c-.415-.165-.866-.25-1.336-.25-2.11 0-3.818 1.79-3.818 4 0 .494.083.964.237 1.4-1.272.65-2.147 2.018-2.147 3.6 0 1.495.782 2.798 1.942 3.486-.02.17-.032.34-.032.514 0 2.21 1.708 4 3.818 4 .47 0 .92-.086 1.335-.25.62 1.334 1.926 2.25 3.437 2.25 1.512 0 2.818-.916 3.437-2.25.415.163.865.248 1.336.248 2.11 0 3.818-1.79 3.818-4 0-.174-.012-.344-.033-.513 1.158-.687 1.943-1.99 1.943-3.484zm-6.616-3.334l-4.334 6.5c-.145.217-.382.334-.625.334-.143 0-.288-.04-.416-.126l-.115-.094-2.415-2.415c-.293-.293-.293-.768 0-1.06s.768-.294 1.06 0l1.77 1.767 3.825-5.74c.23-.345.696-.436 1.04-.207.346.23.44.696.21 1.04z'/%3E%3C/svg%3E" class="verified-badge" alt="Verified">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e4/Twitter_Verified_Badge.svg" class="verified-badge" alt="Verified">
                             </div>
                             <div class="verified-dropdown">
                                 <div class="verified-option" data-type="none">
@@ -952,63 +953,17 @@ function createVerifiedBadge(type) {
     }
     
     if (type === 'blue') {
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.setAttribute('viewBox', '0 0 24 24');
-        svg.setAttribute('fill', '#1DA1F2');
-        svg.classList.add('verified-badge');
-        
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute('d', 'M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.818-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.437 2.25c-.415-.165-.866-.25-1.336-.25-2.11 0-3.818 1.79-3.818 4 0 .494.083.964.237 1.4-1.272.65-2.147 2.018-2.147 3.6 0 1.495.782 2.798 1.942 3.486-.02.17-.032.34-.032.514 0 2.21 1.708 4 3.818 4 .47 0 .92-.086 1.335-.25.62 1.334 1.926 2.25 3.437 2.25 1.512 0 2.818-.916 3.437-2.25.415.163.865.248 1.336.248 2.11 0 3.818-1.79 3.818-4 0-.174-.012-.344-.033-.513 1.158-.687 1.943-1.99 1.943-3.484zm-6.616-3.334l-4.334 6.5c-.145.217-.382.334-.625.334-.143 0-.288-.04-.416-.126l-.115-.094-2.415-2.415c-.293-.293-.293-.768 0-1.06s.768-.294 1.06 0l1.77 1.767 3.825-5.74c.23-.345.696-.436 1.04-.207.346.23.44.696.21 1.04z');
-        
-        svg.appendChild(path);
-        verifiedContainer.appendChild(svg);
+        const img = document.createElement('img');
+        img.src = "https://upload.wikimedia.org/wikipedia/commons/e/e4/Twitter_Verified_Badge.svg";
+        img.classList.add('verified-badge');
+        img.alt = "Blue Verified";
+        verifiedContainer.appendChild(img);
     } else if (type === 'gold') {
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.setAttribute('viewBox', '0 0 22 22');
-        svg.setAttribute('class', 'verified-badge');
-        
-        const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-        
-        // First gradient (outer)
-        const gradient1 = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
-        gradient1.setAttribute('id', 'gradient1');
-        gradient1.setAttribute('gradientUnits', 'userSpaceOnUse');
-        gradient1.setAttribute('x1', '4.411');
-        gradient1.setAttribute('x2', '18.083');
-        gradient1.setAttribute('y1', '2.495');
-        gradient1.setAttribute('y2', '21.508');
-        
-        const stops1 = [
-            ['0', '#f4e72a'],
-            ['0.539', '#cd8105'],
-            ['0.68', '#cb7b00'],
-            ['1', '#f4ec26'],
-            ['1', '#f4e72a']
-        ];
-        
-        stops1.forEach(([offset, color]) => {
-            const stop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-            stop.setAttribute('offset', offset);
-            stop.setAttribute('stop-color', color);
-            gradient1.appendChild(stop);
-        });
-        
-        defs.appendChild(gradient1);
-        svg.appendChild(defs);
-        
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute('fill-rule', 'evenodd');
-        path.setAttribute('clip-rule', 'evenodd');
- 
-        path.setAttribute('d', `
-            M13.324 3.848L11 1.6 8.676 3.848l-3.201-.453-.559 3.184L2.06 8.095 3.48 11l-1.42 2.904 
-            2.856 1.516.559 3.184 3.201-.452L11 20.4l2.324-2.248 3.201.452.559-3.184 2.856-1.516L18.52 11l1.42-2.905-2.856-1.516-.559-3.184z
-            M 14.684 7.166l-4.334 6.5c-.145.217-.382.334-.625.334-.143 0-.288-.04-.416-.126l-.115-.094-2.415-2.415c-.293-.293-.293-.768 0-1.06s.768-.294 1.06 0l1.77 1.767 3.825-5.74
-        `);
-        path.setAttribute('fill', 'url(#gradient1)');
-        
-        svg.appendChild(path);
-        verifiedContainer.appendChild(svg);
+        const img = document.createElement('img');
+        img.src = "https://upload.wikimedia.org/wikipedia/commons/8/81/Twitter_Verified_Badge_Gold.svg";
+        img.classList.add('verified-badge');
+        img.alt = "Gold Verified";
+        verifiedContainer.appendChild(img);
     }
     
     verifiedContainer.classList.remove('hidden');
@@ -1210,6 +1165,19 @@ async function handleTweetDownload() {
     try {
         showToast('Preparing your tweet...');
 
+                // Pre-load verified badge if present
+        const verifiedBadge = tweetCard.querySelector('.verified-badge');
+        if (verifiedBadge) {
+            // Convert SVG to inline data URL
+            const response = await fetch(verifiedBadge.src);
+            const svgText = await response.text();
+            const dataUrl = 'data:image/svg+xml;base64,' + btoa(svgText);
+            verifiedBadge.src = dataUrl;
+        }
+
+        // Wait a moment for the image to update
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         // Get exact dimensions
         const rect = tweetCard.getBoundingClientRect();
 
@@ -1228,6 +1196,18 @@ async function handleTweetDownload() {
         clone.style.margin = '0';
         clone.style.transform = 'none';
         clone.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+
+
+        const clonedBadgeContainer = clone.querySelector('.verified-badge-container');
+        if (clonedBadgeContainer) {
+            clonedBadgeContainer.style.width = '20px';
+            clonedBadgeContainer.style.height = '20px';
+            clonedBadgeContainer.style.display = 'inline-flex';
+            clonedBadgeContainer.style.alignItems = 'center';
+            clonedBadgeContainer.style.justifyContent = 'center';
+            clonedBadgeContainer.style.margin = '0 4px';
+            clonedBadgeContainer.style.border = 'none';
+        }
         
         // Apply specific Twitter styles
         const profileName = clone.querySelector('.profile-name');
@@ -1259,20 +1239,6 @@ async function handleTweetDownload() {
                                   document.body.classList.contains('dim') ? '#fff' : '#0f1419';
         }
 
-        // Handle counts and stats
-        clone.querySelectorAll('.count').forEach(el => {
-            el.style.fontSize = '13px';
-            el.style.fontWeight = '400';
-            el.style.lineHeight = '16px';
-            el.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-            el.style.color = '#536471';
-        });
-
-        
-
-        clone.querySelectorAll('.stat').forEach(el => {
-            el.style.color = '#536471';
-        });
 
         // Remove edit-mode styles
         clone.querySelectorAll('[contenteditable]').forEach(el => {
