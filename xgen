@@ -1326,7 +1326,11 @@ function showToast(message) {
         boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
         zIndex: '1000',
         opacity: '0',
-        transition: 'opacity 0.3s'
+        transition: 'opacity 0.3s',
+        whiteSpace: 'nowrap', // Ensure single line
+        maxWidth: '90%',      // Prevent overflow on small screens
+        overflow: 'hidden',   // Hide overflow text
+        textOverflow: 'ellipsis' // Show ellipsis for overflow
     });
     
     toast.textContent = message;
