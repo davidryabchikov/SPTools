@@ -1203,122 +1203,81 @@ async function handleTweetDownload() {
         const tweetCard = document.querySelector('.tweet-card');
         const canvas = await html2canvas(tweetCard, {
             backgroundColor: null,
-            scale: 4,
+            scale: 2,
             logging: false,
             allowTaint: true,
             useCORS: true,
-            onrendered: function(canvas) {
-                canvas.getContext('2d').scale(4, 4);
-            },
             onclone: (clonedDoc) => {
-                // Handle upload area
                 const clonedUploadArea = clonedDoc.querySelector('.upload-area');
-                if (clonedUploadArea && clonedUploadArea.querySelector('img')) {
-                    clonedUploadArea.style.display = 'block';
-                    clonedUploadArea.style.padding = '0';
+                if (clonedUploadArea && !clonedUploadArea.querySelector('img')) {
+                    clonedUploadArea.style.display = 'none';
                 }
 
-                // Handle verified badge
+                // Ensure verified badge is visible
                 const verifiedBadge = clonedDoc.querySelector('.verified-badge');
                 if (verifiedBadge) {
-                    verifiedBadge.style.width = '20px';
-                    verifiedBadge.style.height = '20px';
-                    verifiedBadge.style.display = 'inline-block';
-                    verifiedBadge.style.verticalAlign = 'middle';
-                    verifiedBadge.style.transform = 'translateZ(0)';
-                    verifiedBadge.style.webkitTransform = 'translateZ(0)';
+                    verifiedBadge.style.cssText = `
+                        width: 20px !important;
+                        height: 20px !important;
+                        display: inline-block !important;
+                        vertical-align: middle !important;
+                        visibility: visible !important;
+                        opacity: 1 !important;
+                    `;
                 }
 
-                const verifiedContainer = clonedDoc.querySelector('.verified-badge-container');
-                if (verifiedContainer) {
-                    verifiedContainer.style.display = 'inline-flex';
-                    verifiedContainer.style.alignItems = 'center';
-                    verifiedContainer.style.justifyContent = 'center';
-                    verifiedContainer.style.width = '20px';
-                    verifiedContainer.style.height = '20px';
-                    verifiedContainer.style.margin = '0 4px';
-                    verifiedContainer.style.transform = 'translateZ(0)';
-                    verifiedContainer.style.webkitTransform = 'translateZ(0)';
-                }
-
-                // Set fonts for all elements
-                clonedDoc.querySelectorAll('.tweet-card *').forEach(el => {
-                    el.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-                });
-
-                // Handle background color based on theme
+                // Set background color based on theme
                 const body = clonedDoc.body;
                 const tweetCard = clonedDoc.querySelector('.tweet-card');
                 
-                if (body.classList.contains('dark')) {
-                    tweetCard.style.backgroundColor = 'rgb(0, 0, 0)';
-                } else if (body.classList.contains('dim')) {
-                    tweetCard.style.backgroundColor = 'rgb(21, 32, 43)';
-                } else {
-                    tweetCard.style.backgroundColor = 'rgb(255, 255, 255)';
-                }
-
-                // Force hardware acceleration
-                tweetCard.style.transform = 'translateZ(0)';
-                tweetCard.style.webkitTransform = 'translateZ(0)';
+                const bgColor = body.classList.contains('dark') ? 'rgb(0, 0, 0)' : 
+                               body.classList.contains('dim') ? 'rgb(21, 32, 43)' : 
+                               'rgb(255, 255, 255)';
+                               
+                tweetCard.style.backgroundColor = bgColor;
             }
         });
 
-        // Check if running on iOS Safari
-        const isIOSSafari = /iPad|iPhone|iPod/.test(navigator.userAgent) && 
-                           !window.MSStream && 
-                           /Safari/.test(navigator.userAgent) &&
-                           !/Chrome/.test(navigator.userAgent);
-
-        if (isIOSSafari) {
-            canvas.toBlob((blob) => {
-                const filename = `tweet_${Date.now()}.png`;
+        // Safari-specific handling
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        
+        if (isSafari) {
+            canvas.toBlob(function(blob) {
+                // Convert blob to base64
                 const reader = new FileReader();
-                
-                reader.onload = function() {
+                reader.onloadend = function() {
+                    const base64data = reader.result;
                     const link = document.createElement('a');
-                    link.href = reader.result;
-                    link.download = filename;
-                    link.target = '_blank';
-                    link.rel = 'noopener noreferrer';
-                    link.style.display = 'none';
+                    link.href = base64data;
+                    link.download = `tweet_${Date.now()}.png`;
+                    
+                    // For iOS Safari specifically
+                    if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                    }
                     
                     document.body.appendChild(link);
+                    link.click();
                     
+                    // Cleanup after a delay
                     setTimeout(() => {
-                        const event = new MouseEvent('click', {
-                            view: window,
-                            bubbles: true,
-                            cancelable: true,
-                            composed: true
-                        });
-                        link.dispatchEvent(event);
-                        
-                        setTimeout(() => {
-                            document.body.removeChild(link);
-                            showToast('Tweet downloaded!');
-                        }, 1000);
+                        document.body.removeChild(link);
+                        showToast('Tweet downloaded!');
                     }, 100);
                 };
-                
                 reader.readAsDataURL(blob);
             }, 'image/png', 1.0);
         } else {
-            canvas.toBlob((blob) => {
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = 'tweet.png';
-                link.style.display = 'none';
-                document.body.appendChild(link);
-                link.click();
-                
-                setTimeout(() => {
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
-                    showToast('Tweet downloaded!');
-                }, 100);
-            }, 'image/png', 1.0);
+            // For non-Safari browsers
+            const imgData = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.href = imgData;
+            link.download = `tweet_${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Tweet downloaded!');
         }
 
         if (!wasPreviewMode) {
@@ -1328,7 +1287,6 @@ async function handleTweetDownload() {
     } catch (err) {
         console.error('Download failed:', err);
         showToast('Failed to download. Please try again.');
-        
         if (!wasPreviewMode) {
             togglePreviewMode(false);
         }
