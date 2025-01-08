@@ -754,7 +754,7 @@ input:checked + .slider:before {
                     </div>
                     <div class="profile-info">
                         <div class="name-section">
-                            <span class="profile-name" contenteditable="true">SocialPlug Tweet Generator</span>
+                            <span class="profile-name" contenteditable="true">Social Plug Tweet Generator</span>
                             <div class="verified-badge-container">
                                 <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231DA1F2'%3E%3Cpath d='M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.818-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.437 2.25c-.415-.165-.866-.25-1.336-.25-2.11 0-3.818 1.79-3.818 4 0 .494.083.964.237 1.4-1.272.65-2.147 2.018-2.147 3.6 0 1.495.782 2.798 1.942 3.486-.02.17-.032.34-.032.514 0 2.21 1.708 4 3.818 4 .47 0 .92-.086 1.335-.25.62 1.334 1.926 2.25 3.437 2.25 1.512 0 2.818-.916 3.437-2.25.415.163.865.248 1.336.248 2.11 0 3.818-1.79 3.818-4 0-.174-.012-.344-.033-.513 1.158-.687 1.943-1.99 1.943-3.484zm-6.616-3.334l-4.334 6.5c-.145.217-.382.334-.625.334-.143 0-.288-.04-.416-.126l-.115-.094-2.415-2.415c-.293-.293-.293-.768 0-1.06s.768-.294 1.06 0l1.77 1.767 3.825-5.74c.23-.345.696-.436 1.04-.207.346.23.44.696.21 1.04z'/%3E%3C/svg%3E" class="verified-badge" alt="Verified">
                             </div>
@@ -1193,15 +1193,14 @@ function displayImage(file) {
 
 async function handleTweetDownload() {
     try {
-        showToast('Preparing the tweet...');
-        
-        const tweetCard = document.querySelector('.tweet-card');
         const wasPreviewMode = document.body.classList.contains('preview-mode');
-
         if (!wasPreviewMode) {
             togglePreviewMode(true);
         }
 
+        showToast('Preparing the tweet...');
+
+        const tweetCard = document.querySelector('.tweet-card');
         const canvas = await html2canvas(tweetCard, {
             backgroundColor: null,
             scale: 4,
@@ -1239,47 +1238,62 @@ async function handleTweetDownload() {
                            !/Chrome/.test(navigator.userAgent);
 
         if (isIOSSafari) {
-            // For iOS Safari, force download using binary data
-            canvas.toBlob(async (blob) => {
-                try {
-                    // Convert blob to base64
-                    const reader = new FileReader();
-                    reader.onloadend = function() {
-                        // Create link with base64 data
-                        const link = document.createElement('a');
-                        link.href = reader.result;
-                        link.download = `tweet_${Date.now()}.png`; // Add timestamp to prevent caching
-                        link.setAttribute('target', '_blank'); // Force new tab
-                        link.setAttribute('rel', 'noopener noreferrer');
-                        
-                        // Add to DOM and click
-                        document.body.appendChild(link);
-                        link.click();
+            // For iOS Safari, use a different approach
+            canvas.toBlob((blob) => {
+                // Create a unique filename with timestamp
+                const filename = `tweet_${Date.now()}.png`;
+                
+                // Create a new FileReader
+                const reader = new FileReader();
+                reader.onload = function() {
+                    // Create temporary link
+                    const link = document.createElement('a');
+                    link.href = reader.result;
+                    link.download = filename;
+                    link.target = '_blank';
+                    
+                    // Required for iOS Safari
+                    link.rel = 'noopener noreferrer';
+                    link.style.display = 'none';
+                    
+                    // Add to DOM
+                    document.body.appendChild(link);
+                    
+                    // Trigger click with slight delay
+                    setTimeout(() => {
+                        const event = new MouseEvent('click', {
+                            view: window,
+                            bubbles: true,
+                            cancelable: true
+                        });
+                        link.dispatchEvent(event);
                         
                         // Cleanup
                         setTimeout(() => {
                             document.body.removeChild(link);
-                            showToast('Tweet ready to download!');
-                        }, 100);
-                    };
-                    reader.readAsDataURL(blob);
-                } catch (err) {
-                    console.error('Safari download error:', err);
-                    showToast('Please try downloading again');
-                }
+                            showToast('Tweet downloaded!');
+                        }, 1000);
+                    }, 100);
+                };
+                reader.readAsDataURL(blob);
             }, 'image/png', 1.0);
         } else {
-            // For other browsers, use standard Blob approach
-            canvas.toBlob(blob => {
+            // For other browsers, use standard approach
+            canvas.toBlob((blob) => {
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
-                link.style.display = 'none';
                 link.href = url;
                 link.download = 'tweet.png';
+                link.style.display = 'none';
                 document.body.appendChild(link);
                 link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
+                
+                // Cleanup
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                }, 100);
+                
                 showToast('Tweet downloaded!');
             }, 'image/png', 1.0);
         }
@@ -1289,9 +1303,9 @@ async function handleTweetDownload() {
         }
 
     } catch (err) {
-        console.error('Failed to download:', err);
+        console.error('Download failed:', err);
         showToast('Failed to download. Please try again.');
-
+        
         if (!wasPreviewMode) {
             togglePreviewMode(false);
         }
