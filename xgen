@@ -1207,17 +1207,46 @@ async function handleTweetDownload() {
             logging: false,
             allowTaint: true,
             useCORS: true,
+            onrendered: function(canvas) {
+                canvas.getContext('2d').scale(4, 4);
+            },
             onclone: (clonedDoc) => {
+                // Handle upload area
                 const clonedUploadArea = clonedDoc.querySelector('.upload-area');
                 if (clonedUploadArea && clonedUploadArea.querySelector('img')) {
                     clonedUploadArea.style.display = 'block';
                     clonedUploadArea.style.padding = '0';
                 }
 
+                // Handle verified badge
+                const verifiedBadge = clonedDoc.querySelector('.verified-badge');
+                if (verifiedBadge) {
+                    verifiedBadge.style.width = '20px';
+                    verifiedBadge.style.height = '20px';
+                    verifiedBadge.style.display = 'inline-block';
+                    verifiedBadge.style.verticalAlign = 'middle';
+                    verifiedBadge.style.transform = 'translateZ(0)';
+                    verifiedBadge.style.webkitTransform = 'translateZ(0)';
+                }
+
+                const verifiedContainer = clonedDoc.querySelector('.verified-badge-container');
+                if (verifiedContainer) {
+                    verifiedContainer.style.display = 'inline-flex';
+                    verifiedContainer.style.alignItems = 'center';
+                    verifiedContainer.style.justifyContent = 'center';
+                    verifiedContainer.style.width = '20px';
+                    verifiedContainer.style.height = '20px';
+                    verifiedContainer.style.margin = '0 4px';
+                    verifiedContainer.style.transform = 'translateZ(0)';
+                    verifiedContainer.style.webkitTransform = 'translateZ(0)';
+                }
+
+                // Set fonts for all elements
                 clonedDoc.querySelectorAll('.tweet-card *').forEach(el => {
                     el.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
                 });
 
+                // Handle background color based on theme
                 const body = clonedDoc.body;
                 const tweetCard = clonedDoc.querySelector('.tweet-card');
                 
@@ -1228,6 +1257,10 @@ async function handleTweetDownload() {
                 } else {
                     tweetCard.style.backgroundColor = 'rgb(255, 255, 255)';
                 }
+
+                // Force hardware acceleration
+                tweetCard.style.transform = 'translateZ(0)';
+                tweetCard.style.webkitTransform = 'translateZ(0)';
             }
         });
 
@@ -1238,47 +1271,39 @@ async function handleTweetDownload() {
                            !/Chrome/.test(navigator.userAgent);
 
         if (isIOSSafari) {
-            // For iOS Safari, use a different approach
             canvas.toBlob((blob) => {
-                // Create a unique filename with timestamp
                 const filename = `tweet_${Date.now()}.png`;
-                
-                // Create a new FileReader
                 const reader = new FileReader();
+                
                 reader.onload = function() {
-                    // Create temporary link
                     const link = document.createElement('a');
                     link.href = reader.result;
                     link.download = filename;
                     link.target = '_blank';
-                    
-                    // Required for iOS Safari
                     link.rel = 'noopener noreferrer';
                     link.style.display = 'none';
                     
-                    // Add to DOM
                     document.body.appendChild(link);
                     
-                    // Trigger click with slight delay
                     setTimeout(() => {
                         const event = new MouseEvent('click', {
                             view: window,
                             bubbles: true,
-                            cancelable: true
+                            cancelable: true,
+                            composed: true
                         });
                         link.dispatchEvent(event);
                         
-                        // Cleanup
                         setTimeout(() => {
                             document.body.removeChild(link);
                             showToast('Tweet downloaded!');
                         }, 1000);
                     }, 100);
                 };
+                
                 reader.readAsDataURL(blob);
             }, 'image/png', 1.0);
         } else {
-            // For other browsers, use standard approach
             canvas.toBlob((blob) => {
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
@@ -1288,13 +1313,11 @@ async function handleTweetDownload() {
                 document.body.appendChild(link);
                 link.click();
                 
-                // Cleanup
                 setTimeout(() => {
                     document.body.removeChild(link);
                     URL.revokeObjectURL(url);
+                    showToast('Tweet downloaded!');
                 }, 100);
-                
-                showToast('Tweet downloaded!');
             }, 'image/png', 1.0);
         }
 
