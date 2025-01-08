@@ -158,6 +158,7 @@ body:not(.preview-mode) .upload-overlay {
 .profile-info {
     display: flex;
     flex-direction: column;
+    
 }
 
 .name-section {
@@ -172,19 +173,21 @@ body:not(.preview-mode) .upload-overlay {
 }
 
 .verified-badge {
-    width: 16px;
-    height: 16px;
-    display: flex;
+    width: 20px;
+    height: 20px;
+    display: block;  /* Change from flex to block */
+    object-fit: contain;
 }
 
 .verified-badge-container {
     width: 20px;
     height: 20px;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     margin: 0 4px;
+    flex-shrink: 0;  /* Prevent shrinking */
 }
 
 body:not(.preview-mode) .verified-badge-container {
@@ -957,15 +960,24 @@ function createVerifiedBadge(type) {
         img.src = "https://upload.wikimedia.org/wikipedia/commons/e/e4/Twitter_Verified_Badge.svg";
         img.classList.add('verified-badge');
         img.alt = "Blue Verified";
+        img.style.width = '20px';
+        img.style.height = '20px';
+        img.style.display = 'block';
         verifiedContainer.appendChild(img);
     } else if (type === 'gold') {
         const img = document.createElement('img');
         img.src = "https://upload.wikimedia.org/wikipedia/commons/8/81/Twitter_Verified_Badge_Gold.svg";
         img.classList.add('verified-badge');
         img.alt = "Gold Verified";
+        img.style.width = '20px';
+        img.style.height = '20px';
+        img.style.display = 'block';
         verifiedContainer.appendChild(img);
     }
     
+    verifiedContainer.style.display = 'inline-flex';
+    verifiedContainer.style.alignItems = 'center';
+    verifiedContainer.style.justifyContent = 'center';
     verifiedContainer.classList.remove('hidden');
 }
 
