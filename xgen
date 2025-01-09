@@ -1177,18 +1177,44 @@ async function handleTweetDownload() {
     try {
         showToast('Preparing your tweet...');
 
-                // Pre-load verified badge if present
+        // Pre-load verified badge if present
         const verifiedBadge = tweetCard.querySelector('.verified-badge');
         if (verifiedBadge) {
-            // Convert SVG to inline data URL
-            const response = await fetch(verifiedBadge.src);
-            const svgText = await response.text();
-            const dataUrl = 'data:image/svg+xml;base64,' + btoa(svgText);
-            verifiedBadge.src = dataUrl;
-        }
+            try {
+                // Create a new Image object to ensure proper loading
+                const img = new Image();
+                img.crossOrigin = "anonymous"; // Enable CORS
+                
+                // Create a promise to wait for image loading
+                const loadPromise = new Promise((resolve, reject) => {
+                    img.onload = () => resolve();
+                    img.onerror = () => reject(new Error('Failed to load verified badge'));
+                });
 
-        // Wait a moment for the image to update
-        await new Promise(resolve => setTimeout(resolve, 100));
+                // Start loading the image
+                img.src = verifiedBadge.src;
+                
+                // Wait for image to load
+                await loadPromise;
+                
+                // Create a canvas to convert the SVG
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                
+                // Convert to data URL
+                const dataUrl = canvas.toDataURL('image/png');
+                verifiedBadge.src = dataUrl;
+                
+                // Wait a moment for the new source to be applied
+                await new Promise(resolve => setTimeout(resolve, 100));
+            } catch (error) {
+                console.warn('Failed to pre-load verified badge:', error);
+                // Continue with download even if badge loading fails
+            }
+        }
 
         // Get exact dimensions
         const rect = tweetCard.getBoundingClientRect();
@@ -1202,55 +1228,110 @@ async function handleTweetDownload() {
 
         // Clone the tweet card
         const clone = tweetCard.cloneNode(true);
-        
-        // Apply exact Twitter styles to the clone
         clone.style.width = rect.width + 'px';
         clone.style.margin = '0';
         clone.style.transform = 'none';
-        clone.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-
-
-        const clonedBadgeContainer = clone.querySelector('.verified-badge-container');
-        if (clonedBadgeContainer) {
-            clonedBadgeContainer.style.width = '20px';
-            clonedBadgeContainer.style.height = '20px';
-            clonedBadgeContainer.style.display = 'inline-flex';
-            clonedBadgeContainer.style.alignItems = 'center';
-            clonedBadgeContainer.style.justifyContent = 'center';
-            clonedBadgeContainer.style.margin = '0 4px';
-            clonedBadgeContainer.style.border = 'none';
-        }
         
-        // Apply specific Twitter styles
+        // Apply exact Twitter styles to the clone
+        clone.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+        
+        // Style profile section
         const profileName = clone.querySelector('.profile-name');
         if (profileName) {
-            profileName.style.fontSize = '15px';
-            profileName.style.fontWeight = '700';
-            profileName.style.lineHeight = '20px';
-            profileName.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-            profileName.style.color = document.body.classList.contains('dark') ? '#fff' : 
-                                    document.body.classList.contains('dim') ? '#fff' : '#0f1419';
+            Object.assign(profileName.style, {
+                fontSize: '15px',
+                fontWeight: '700',
+                lineHeight: '20px',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+                color: document.body.classList.contains('dark') ? '#fff' : 
+                       document.body.classList.contains('dim') ? '#fff' : '#0f1419'
+            });
         }
 
         const profileHandle = clone.querySelector('.profile-handle');
         if (profileHandle) {
-            profileHandle.style.fontSize = '15px';
-            profileHandle.style.fontWeight = '400';
-            profileHandle.style.lineHeight = '20px';
-            profileHandle.style.color = '#536471';
-            profileHandle.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+            Object.assign(profileHandle.style, {
+                fontSize: '15px',
+                fontWeight: '400',
+                lineHeight: '20px',
+                color: document.body.classList.contains('dark') ? '#71767b' :
+                       document.body.classList.contains('dim') ? '#8b98a5' : '#536471',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+            });
         }
 
         const tweetText = clone.querySelector('.tweet-text');
         if (tweetText) {
-            tweetText.style.fontSize = '15px';
-            tweetText.style.fontWeight = '400';
-            tweetText.style.lineHeight = '20px';
-            tweetText.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-            tweetText.style.color = document.body.classList.contains('dark') ? '#fff' : 
-                                  document.body.classList.contains('dim') ? '#fff' : '#0f1419';
+            Object.assign(tweetText.style, {
+                fontSize: '15px',
+                fontWeight: '400',
+                lineHeight: '20px',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+                color: document.body.classList.contains('dark') ? '#fff' : 
+                       document.body.classList.contains('dim') ? '#fff' : '#0f1419',
+                whiteSpace: 'pre-wrap'
+            });
         }
 
+        // Style timestamps and views
+        const timestamps = clone.querySelectorAll('.timestamp');
+        timestamps.forEach(timestamp => {
+            Object.assign(timestamp.style, {
+                fontSize: '15px',
+                fontWeight: '400',
+                color: document.body.classList.contains('dark') ? '#71767b' :
+                       document.body.classList.contains('dim') ? '#8b98a5' : '#536471'
+            });
+        });
+
+        const views = clone.querySelector('.views');
+        if (views) {
+            Object.assign(views.style, {
+                fontSize: '15px',
+                fontWeight: '400',
+                color: document.body.classList.contains('dark') ? '#71767b' :
+                       document.body.classList.contains('dim') ? '#8b98a5' : '#536471'
+            });
+        }
+
+        // Style stats
+        const stats = clone.querySelectorAll('.stat');
+        stats.forEach(stat => {
+            const count = stat.querySelector('.count');
+            if (count) {
+                Object.assign(count.style, {
+                    fontSize: '13px',
+                    fontWeight: '400',
+                    color: document.body.classList.contains('dark') ? '#71767b' :
+                           document.body.classList.contains('dim') ? '#8b98a5' : '#536471',
+                    marginLeft: '4px'
+                });
+            }
+        });
+
+        // Style verified badge in clone
+        const clonedBadge = clone.querySelector('.verified-badge');
+        if (clonedBadge) {
+            Object.assign(clonedBadge.style, {
+                width: '20px',
+                height: '20px',
+                display: 'block'
+            });
+        }
+
+        const clonedBadgeContainer = clone.querySelector('.verified-badge-container');
+        if (clonedBadgeContainer) {
+            Object.assign(clonedBadgeContainer.style, {
+                width: '20px',
+                height: '20px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 4px',
+                border: 'none',
+                padding: '0'
+            });
+        }
 
         // Remove edit-mode styles
         clone.querySelectorAll('[contenteditable]').forEach(el => {
@@ -1280,9 +1361,12 @@ async function handleTweetDownload() {
         // Add clone to temp container
         tempContainer.appendChild(clone);
 
+        // Wait for everything to be ready
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         // Capture with html2canvas
         const canvas = await html2canvas(clone, {
-            scale: 3, // Higher scale for better quality
+            scale: 3,
             useCORS: true,
             allowTaint: true,
             backgroundColor: getComputedStyle(tweetCard).backgroundColor,
@@ -1296,7 +1380,7 @@ async function handleTweetDownload() {
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const filename = `tweet_${timestamp}.png`;
 
-        // Convert to blob
+        // Convert to blob and download
         canvas.toBlob((blob) => {
             if (!blob) {
                 throw new Error('Failed to create image blob');
