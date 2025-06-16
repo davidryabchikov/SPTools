@@ -1,0 +1,2240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans&display=swap" rel="stylesheet">
+</head>
+
+
+<style>
+:root {
+    /* Light Theme */
+    --bg-light: #ffffff;
+    --text-light: #1a1a1b;
+    --text-secondary-light: black;
+    --border-light: #ccc;
+    --button-light: #0079d3;
+    --button-text-light: #ffffff;
+    --hover-light: rgba(26, 26, 27, 0.05);
+    --upvote-light: #ff4500;
+    --downvote-light: #7193ff;
+    --award-gold-light: #ff9d00;
+    --award-silver-light: #a8a8a8;
+    --flair-bg-light: #edeff1;
+    --flair-text-light: #1a1a1b;
+    --subreddit-color-light: #1a1a1b;
+    
+    /* Dark Theme */
+    --bg-dark: #030303;
+    --text-dark: #d7dadc;
+    --text-secondary-dark: white;
+    --border-dark: #343536;
+    --button-dark: #d7dadc;
+    --button-text-dark: #1a1a1b;
+    --hover-dark: rgba(215, 218, 220, 0.05);
+    --upvote-dark: #ff4500;
+    --downvote-dark: #7193ff;
+    --award-gold-dark: #ff9d00;
+    --award-silver-dark: #a8a8a8;
+    --flair-bg-dark: #272729;
+    --flair-text-dark: #d7dadc;
+    --subreddit-color-dark: #d7dadc;
+
+    /* Vote section */
+    --upvote-color: #d93900;
+    --downvote-color: #6a5cff;
+}
+
+.subreddit-icon-container {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  margin-right: 6px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.subreddit-icon {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.edit-icon-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.edit-icon-overlay svg {
+  color: white;
+}
+
+.subreddit-icon-container:hover .edit-icon-overlay {
+  opacity: 1;
+}
+
+body:is(.preview-mode) .edit-icon-overlay {
+  display: none;
+}
+
+.rg-container {
+    width: 100%;
+    max-width: 900px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    min-height: 700px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-family: 'Noto Sans', Arial, sans-serif;
+    gap: 20px;
+}
+
+/* Mode Toggle */
+.mode-toggle {
+    background: white;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    align-self: center;
+    gap: 20px;
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    -ms-border-radius: 8px;
+    -o-border-radius: 8px;
+}
+
+.mode-toggle button {
+    padding: 8px 16px;
+    border: 1px solid #00000016;
+    border-radius: 8px;
+    font-size: 15px;
+    min-width: 100px;
+    font-weight: 500;
+    cursor: pointer;
+    background: transparent;
+    transition: background-color 0.2s;
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    -ms-border-radius: 8px;
+    -o-border-radius: 8px;
+}
+
+.mode-toggle button.active {
+    background-color: #0ECF7F;
+    color: var(--button-text-light);
+}
+
+/* Reddit Card */
+.reddit-card {
+    font-family: 'Noto Sans', Arial, sans-serif;
+    background: var(--bg-light);
+    align-self: center;
+    width: 100%;
+    max-width: 660px;
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    padding: 16px;
+    box-sizing: border-box;
+    margin: 0 auto;
+}
+
+
+/* Mobile view classes */
+body.mobile-view .reddit-card {
+    width: 100%;
+    max-width: 450px;
+    border-radius: 12px;
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+body.mobile-view .separator {
+    display: none;
+}
+
+body.mobile-view .share-text {
+    display: none;
+}
+
+body.mobile-view .vote-section,
+body.mobile-view .action-btn {
+    background-color: transparent !important;
+    border: 1px solid #e4e4e4;
+}
+
+body.mobile-view.dark .vote-section,
+body.mobile-view.dark .action-btn {
+    border-color: #262729;
+}
+
+body.mobile-view .vote-separator {
+    display: inline-block !important;
+    color: #e4e4e4;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1;
+    height: 16px;
+    margin-left: 2px;
+    user-select: none;
+}
+
+body.mobile-view.dark .vote-separator {
+    color: #262729;
+}
+
+body.mobile-view .vote-section.upvoted {
+    background-color: transparent !important;
+}
+
+body.mobile-view .vote-section.downvoted {
+    background-color: transparent !important;
+}
+
+body.mobile-view .vote-section.upvoted .vote-count {
+    color: var(--upvote-color) !important;
+}
+
+body.mobile-view .vote-section.downvoted .vote-count {
+    color: var(--downvote-color) !important;
+}
+
+body.mobile-view .vote-section.upvoted .upvote-icon.filled {
+    color: var(--upvote-color);
+    fill: var(--upvote-color);
+}
+
+body.mobile-view .vote-section.downvoted .downvote-icon.filled {
+    color: var(--downvote-color);
+    fill: var(--downvote-color);
+}
+
+body.mobile-view .vote-section .upvote-icon.outline,
+body.mobile-view .vote-section .downvote-icon.outline {
+    color: var(--text-secondary-light);
+    fill: var(--text-secondary-light);
+}
+
+body.mobile-view.dark .vote-section .upvote-icon.outline,
+body.mobile-view.dark .vote-section .downvote-icon.outline {
+    color: var(--text-secondary-dark);
+    fill: var(--text-secondary-dark);
+}
+
+.post-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.subreddit-info {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.subreddit-name {
+    display: inline-flex;
+    align-items: center;
+    font-weight: 700;
+    color: var(--subreddit-color-light);
+}
+
+.subreddit-prefix {
+    margin-right: 0px;
+    user-select: none;
+    pointer-events: none;
+}
+
+.subreddit-name-editable {
+    outline: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.post-menu-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+
+.post-menu-btn:hover {
+    background-color: var(--hover-light);
+}
+
+body.dark .post-menu-btn:hover {
+    background-color: var(--hover-dark);
+}
+
+.post-menu-btn svg {
+    width: 16px;
+    height: 16px;
+    fill: var(--text-secondary-light);
+}
+
+body.dark .post-menu-btn svg {
+    fill: var(--text-secondary-dark);
+}
+
+.post-info {
+    color: var(--text-secondary-light);
+    font-size: 12px;
+}
+
+.post-title {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text-light);
+    margin-bottom: 10px;
+    line-height: 24px;
+    word-wrap: break-word;
+    white-space: normal;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.post-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.content-wrapper {
+    flex: 1;
+}
+
+.flair-container {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.color-picker-wrapper {
+    display: flex;
+    align-items: center;
+    border-radius: 50%;
+}
+
+body:is(.preview-mode) .color-picker-wrapper {
+    display: none;
+}
+
+.color-picker-button {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    padding: 4px;
+    border: 1px solid var(--border-light);
+    cursor: pointer;
+    background: var(--bg-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.color-picker-button svg {
+    width: 16px;
+    height: 16px;
+    fill: var(--text-secondary-light);
+}
+
+body.dark .color-picker-button {
+    background: var(--bg-dark);
+    border-color: var(--border-dark);
+}
+
+body.dark .color-picker-button svg {
+    fill: var(--text-secondary-dark);
+}
+
+.color-picker-input {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.post-flair {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: var(--flair-bg-light);
+    color: var(--flair-text-light);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+body:not(.preview-mode) .post-flair {
+    border: 1px dashed var(--border-light);
+}
+
+/* Remove text background color, so we can see editable text in both dark and light*/
+body:not(.preview-mode) .post-flair [contenteditable] {
+    background-color: transparent !important;
+}
+
+
+.flair-dropdown {
+    position: absolute;
+    background: white;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: none;
+    z-index: 100;
+    padding: 8px 0;
+}
+
+.flair-dropdown.show {
+    display: block;
+}
+
+.flair-option {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    cursor: pointer;
+    gap: 8px;
+}
+
+.flair-option:hover {
+    background-color: var(--hover-light);
+}
+
+/* Add flair button classes */
+.add-flair-button {
+    display: inline-block;
+    padding: 4px 10px;
+    margin-bottom: 10px;
+    border-radius: 9999px;
+    background-color: var(--flair-bg-light);
+    border: none;
+    color: #0ECF7F;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.add-flair-button:hover {
+    background-color: rgba(14, 207, 127, 0.1);
+}
+
+body.dark .add-flair-button {
+    background-color: var(--flair-bg-dark);
+    color: #0ECF7F;
+}
+
+body.dark .add-flair-button:hover {
+    background-color: rgba(14, 207, 127, 0.15);
+}
+
+body.preview-mode .add-flair-button {
+    display: none !important;
+}
+
+
+/* Post text classes */
+.post-text {
+    font-size: 14px;
+    line-height: 21px;
+    margin: 0;
+    color: var(--text-light);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+}
+
+.image-upload {
+    margin: 12px 0;
+}
+
+.upload-area {
+    border: 3px dashed var(--border-light);
+    border-radius: 8px;
+    background-color: transparent;
+    padding: 32px;
+    text-align: center;
+    position: relative;
+    cursor: pointer;
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    -ms-border-radius: 8px;
+    -o-border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+body:is(.preview-mode) .upload-area {
+    border: none;
+    margin: 0;
+    padding: 0;
+    border-radius: 15px;
+    -webkit-border-radius: 15px;
+    -moz-border-radius: 15px;
+    -ms-border-radius: 15px;
+    -o-border-radius: 15px;
+}
+
+.plus-icon {
+    background-color: #F2F2F2;
+    border-radius: 50%;
+    height: 30px;
+    display: flex;
+    padding: 0px;
+    width: 30px;
+    font-family: 'Courier New', Courier, monospace;
+    margin: 0 auto;
+    color: var(--text-secondary-light);
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+    -ms-border-radius: 50%;
+    -o-border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    line-height: 0;
+    vertical-align: center;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.upload-text {
+    color: var(--text-secondary-light);
+    font-size: 15px;
+}
+
+.select-text {
+    color: #0ECF7F;
+    cursor: pointer;
+}
+
+.file-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.remove-image-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: rgba(0,0,0,0.6);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-image-button:hover {
+    background-color: rgba(0,0,0,0.8);
+}
+
+body.preview-mode .remove-image-button {
+    display: none !important;
+}
+
+
+.post-meta {
+    margin: 16px 0;
+    color: var(--text-secondary-light);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+}
+
+
+/* Post time classes */
+.post-time {
+    margin-right: 8px;
+}
+
+.post-time-number {
+    display: inline-block;
+    min-width: 10px;
+    padding: 0 2px;
+    outline: none;
+    background-color: #f1f1f1;
+    border-radius: 4px;
+    cursor: text;
+}
+
+body.dark .post-time-number {
+    background-color: #16181c;
+}
+
+.post-time-unit {
+    margin: 0 4px;
+    font-size: 12px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    border: 1px solid var(--border-light);
+    background-color: var(--bg-light);
+    color: var(--text-light);
+    cursor: pointer;
+}
+
+body.dark .post-time-unit {
+    background-color: var(--bg-dark);
+    border-color: var(--border-dark);
+    color: var(--text-dark);
+}
+
+body.preview-mode .post-time-number,
+body.preview-mode .post-time-unit,
+body.preview-mode .ago-text {
+    display: none !important;
+}
+
+body.preview-mode .post-time-text {
+    display: inline !important;
+}
+
+
+
+
+/* Post actions */
+.post-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 8px;
+}
+
+.post-actions-right {
+    display: flex;
+    gap: 12px;
+}
+
+body.mobile-view .post-actions-right {
+    margin-left: auto;
+}
+
+
+/* Vote section */
+.vote-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--flair-bg-light);
+    color: #1a1a1b;
+    border-radius: 16px;
+    height: 32px;
+    padding: 4px;
+    box-sizing: border-box;
+    transition: background-color 0.2s ease;
+}
+
+body.dark .vote-section {
+    background-color: var(--flair-bg-dark);
+    color: #ffffff;
+}
+
+.vote-section.upvoted {
+    background-color: var(--upvote-color) !important;
+    color: #ffffff !important;
+}
+
+.vote-section.downvoted {
+    background-color: var(--downvote-color) !important;
+    color: #ffffff !important;
+}
+
+.vote-button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: inherit;
+}
+
+.upvote-icon, .downvote-icon {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+    transition: fill 0.2s ease;
+    vertical-align: middle;
+}
+
+.vote-count {
+    font-weight: 600;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: inherit !important;
+}
+
+.vote-count[contenteditable] {
+    background-color: transparent !important;
+}
+
+.vote-count[contenteditable]:focus {
+    background-color: transparent !important;
+}
+
+/* Action buttons */
+.action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--flair-bg-light);
+    border: none;
+    border-radius: 16px;
+    padding: 12px;
+    gap: 6px;
+    color: var(--text-secondary-light);
+    font-size: 12px;
+    height: 32px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.action-btn.give-award {
+    padding: 14px;
+}
+
+
+.action-btn svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}
+
+.action-btn:hover {
+    background-color: var(--hover-light);
+}
+
+/* Award styles */
+.award-icon-in-button {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.award-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin-top: 0;
+    width: 300px;
+    max-height: 80vh;
+    border-radius: 12px;
+    background: var(--bg-light);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    overflow-y: auto;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+    pointer-events: none;
+    z-index: 1000;
+    display: none;
+    max-width: 90vw;
+    top: 10vh;
+    transform: translate(-50%, 0);
+}
+
+.award-popup.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, 0);
+    display: flex;
+}
+
+@media screen and (max-width: 768px) {
+    .award-popup {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: auto;
+        transform: translateY(100%);
+        border-radius: 12px 12px 0 0;
+        width: 100%;
+        max-height: 85vh;
+        transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    }
+
+    .award-popup.show {
+        transform: translateY(0);
+    }
+}
+
+.award-popup-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 24px;
+    height: 24px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-secondary-light);
+    background: var(--flair-bg-light);
+    border-radius: 50%;
+    border: none;
+    padding: 0;
+    
+    @media screen and (max-width: 768px) {
+        display: flex;
+    }
+}
+
+body.dark .award-popup-close {
+    color: var(--text-secondary-dark);
+    background: var(--flair-bg-dark);
+}
+
+.award-popup.show {
+    display: flex;
+    opacity: 1;
+    transform: scale(1);
+}
+
+.award-categories {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.award-category {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.award-category:last-child {
+    border-bottom: none;
+}
+
+.award-category h3 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-light);
+}
+
+.award-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+}
+
+.award-option {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 12px;
+    cursor: pointer;
+    gap: 8px;
+    border-radius: 8px;
+    transition: all 0.2s ease-in-out;
+    
+    @media screen and (max-width: 768px) {
+        min-height: 56px;
+        padding: 16px;
+    }
+}
+
+.award-option:hover {
+    background-color: var(--hover-light);
+}
+
+.award-option img {
+    width: 24px;
+    height: 24px;
+}
+
+.award-option-label {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Bottom Controls */
+.bottom-controls {
+    max-width: 600px;
+    margin: 0 auto;
+    background: white;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    -ms-border-radius: 8px;
+    -o-border-radius: 8px;
+}
+
+.theme-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.theme-label {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-light);
+}
+
+.theme-btn {
+    min-width: 80px;
+    min-height: 37px;
+    padding: 8px 16px;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    background: transparent;
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--text-light);
+    transition: all 0.2s;
+}
+
+.theme-btn.active {
+    background-color: #0ECF7F;
+    color: var(--button-text-light);
+    border-color: transparent;
+}
+
+.button-group{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 10px;
+
+    @media screen and (max-width: 768px) {
+        width: 100%;
+    }
+}
+
+.download-btn {
+    display: flex;
+    min-height: 37px;
+    min-width: 100px;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px 10px 18px;
+    border: none;
+    border-radius: 8px;
+    background-color: #0ECF7F;
+    color: white;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    -webkit-border-radius: 8px;
+    -moz-border-radius: 8px;
+    -ms-border-radius: 8px;
+    -o-border-radius: 8px;
+
+    @media screen and (max-width: 768px) {
+        width: 100%;
+        flex-grow: 1;
+    }
+}
+
+.download-icon {
+    width: 20px;
+    height: 20px;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 2.59l5.7 5.7-1.41 1.42L13 6.41V16h-2V6.41l-3.3 3.3-1.41-1.42L12 2.59zM21 15l-.02 3.51c0 1.38-1.12 2.49-2.5 2.49H5.5C4.11 21 3 19.88 3 18.5V15h2v3.5c0 .28.22.5.5.5h12.98c.28 0 .5-.22.5-.5L19 15h2z'%3E%3C/path%3E%3C/svg%3E") center/contain no-repeat;
+}
+
+.download-btn:hover {
+    background-color: #0bbf71;
+    transition: all 200ms;
+}
+
+/* Mobile responsive bottom controls */
+@media screen and (max-width: 768px) {
+    .bottom-controls {
+        flex-direction: column;
+        align-items: stretch;  /* full width */
+        gap: 10px;             /* space between rows */
+    }
+
+    .button-group {
+        width: 100%;
+        flex-direction: column; /* stack PC/Mobile and Download vertically */
+    }
+
+    .download-btn {
+        width: 100%;            /* full width button */
+    }
+
+    .pc-mobile-toggle {
+        justify-content: space-between;
+        width: 100%;
+    }
+}
+
+
+/* Theme Classes */
+body.dark .reddit-card {
+    background-color: var(--bg-dark);
+    border-color: var(--border-dark);
+}
+
+body.dark .action-btn {
+    background-color: var(--flair-bg-dark);
+    color: var(--text-secondary-dark);
+}
+
+body.dark .post-title,
+body.dark .post-text,
+body.dark .vote-count {
+    color: var(--text-dark);
+}
+
+body.dark .subreddit-name {
+    color: var(--subreddit-color-dark);
+}
+
+body.dark .post-info,
+body.dark .upload-text,
+body.dark .post-meta,
+body.dark .action-btn {
+    color: var(--text-secondary-dark);
+}
+
+body.dark .upvote-icon, 
+body.dark .downvote-icon {
+    fill: var(--text-secondary-dark);
+}
+
+body.dark .post-flair {
+    background-color: var(--flair-bg-dark);
+    color: var(--flair-text-dark);
+}
+
+body.dark .upload-area {
+    border-color: var(--border-dark);
+}
+
+/* body.dark .post-actions {
+    border-color: var(--border-dark);
+} */
+
+body.dark .plus-icon {
+    background-color: #272729;
+}
+
+[contenteditable] {
+    background-color: #f1f1f1;
+    border-radius: 4px;
+    padding: 2px 6px;
+    cursor: text;
+}
+
+body.dark [contenteditable] {
+    background-color: #16181c;
+}
+
+body.dark [contenteditable]:focus {
+    background-color: #1d1f23;
+}
+
+[contenteditable]:focus {
+    outline: none;
+    background-color: #e5e5e5;
+}
+
+.pc-mobile-toggle {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin: auto;
+}
+
+.toggle-label {
+    font-size: 15px;
+    padding-right: 5px;
+    font-weight: 500;
+    color: var(--text-light);
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    margin-top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #cfd9de;
+    transition: .2s;
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .2s;
+}
+
+input:checked + .slider {
+    background-color: #0ECF7F;
+}
+
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
+
+.subreddit-name,
+.post-title,
+.post-text,
+.post-time,
+.vote-count {
+    white-space: wrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin-right: 4px;
+    background-color: #edeff1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.user-avatar svg {
+    width: 100%;
+    height: 100%;
+}
+
+.user-name {
+    color: var(--text-secondary-light);
+    font-size: 12px;
+    margin-right: 4px;
+}
+
+body.dark .user-avatar {
+    background-color: #343536;
+}
+
+body.dark .user-name {
+    color: var(--text-secondary-dark);
+}
+
+.award-popup {
+    background-color: var(--bg-light);
+}
+
+body.dark .award-category {
+    border-color: var(--border-dark);
+}
+
+.award-popup::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+    width: 12px;
+    height: 12px;
+    background: inherit;
+    border-left: 1px solid var(--border-light);
+    border-top: 1px solid var(--border-light);
+}
+
+body.dark .award-popup::before {
+    border-color: var(--border-dark);
+}
+
+.flair-dropdown {
+    background-color: var(--bg-light);
+}
+
+</style>
+
+
+<body class="light">
+    <div class="rg-container">
+        <div class="mode-toggle">
+            <button class="edit-btn active">Edit</button>
+            <button class="preview-btn">Preview</button>
+        </div>
+        
+        <div class="reddit-card">
+            <div class="post-header">
+                <div class="subreddit-info">
+                  <div class="subreddit-icon-container">
+                    <img src="https://b.thumbs.redditmedia.com/9aAIqRjSQwF2C7Xohx1u2Q8nAUqmUsHqdYtAlhQZsgE.png" alt="icon" class="subreddit-icon" loading="lazy">
+                    <div class="edit-icon-overlay">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                      </svg>
+                    </div>
+                    <input type="file" class="subreddit-icon-input" accept="image/*" style="display: none;">
+                  </div>
+                  <div>
+                    <div>
+                        <span class="subreddit-name">
+                            <span class="subreddit-prefix">r/</span>
+                            <span class="subreddit-name-editable" contenteditable="true">SocialPlug</span>
+                        </span>
+                        <span class="post-info">
+                            <span class="separator">•</span>
+                            <span class="post-time">
+                              <span class="post-time-number" contenteditable="true">5</span>
+                              <select class="post-time-unit">
+                                <option value="min.">min.</option>
+                                <option value="hr.">hr.</option>
+                                <option value="day">day</option>
+                                <option value="days">days</option>
+                                <option value="yr.">yr.</option>
+                              </select>
+                              <span class="ago-text">ago</span>
+                              <span class="post-time-text" style="display: none;">5 hr ago</span>
+                            </span>
+                        </span>
+                    </div>
+
+                    <div class="author-info">
+                      <span class="user-name" contenteditable="true">socialplug</span>
+                    </div>
+                  </div>
+                </div>
+                <button class="post-menu-btn">
+                    <svg rpl="" fill="currentColor" height="16" icon-name="overflow-horizontal-fill" viewBox="0 0 20 20" width="16" xmlns="http://www.w3.org/2000/svg"> <!--?lit$8288602733$--><!--?lit$8288602733$--><path d="M6 10a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm4-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"></path><!--?--> </svg>
+                </button>
+            </div>
+            
+            <div class="post-title" contenteditable="true">Welcome to the Reddit Post Generator!</div>
+            
+            <div class="flair-container">
+              <div class="color-picker-wrapper">
+                <label class="color-picker-button">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10a2.5 2.5 0 0 0 2.5-2.5c0-.61-.23-1.2-.64-1.67a.528.528 0 0 1-.13-.33c0-.28.22-.5.5-.5H16c3.31 0 6-2.69 6-6 0-4.96-4.49-9-10-9zm5.5 11c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm-3-4c-.83 0-1.5-.67-1.5-1.5S13.67 6 14.5 6s1.5.67 1.5 1.5S15.33 9 14.5 9zM9.5 9C8.67 9 8 8.33 8 7.5S8.67 6 9.5 6s1.5.67 1.5 1.5S10.33 9 9.5 9zm-3 4c-.83 0-1.5-.67-1.5-1.5S5.67 10 6.5 10s1.5.67 1.5 1.5S7.33 13 6.5 13z"/>
+                  </svg>
+                  <input type="color" class="color-picker-input" value="#edeff1">
+                </label>
+              </div>
+              <div class="post-flair">
+                <span contenteditable="true">Announcement</span>
+              </div>
+            </div>
+            <button class="add-flair-button" style="display: none;">
+                + Add Flair
+            </button>
+            
+            <div class="post-text" contenteditable="true">Hey there, welcome to the Reddit Post Generator!
+          
+          - You can edit anything you want by clicking on it
+          - Move to the preview mode from the top bar
+          - Check the preview & download your image in one-click</div>
+            
+            <div class="image-upload">
+              <div class="upload-area">
+                <div class="plus-icon">+</div>
+                <span class="upload-text">Drop your image here, or <span class="select-text">select one</span></span>
+                <input type="file" class="file-input" accept="image/*">
+                <button class="remove-image-button" style="display: none;">✕</button>
+              </div>
+            </div>
+          
+            <div class="post-actions">
+              <div class="vote-section">
+                <button class="vote-button upvote">
+                    <svg rpl="" fill="currentColor" height="16" class="upvote-icon outline" viewBox="0 0 20 20" width="16" xmlns="http://www.w3.org/2000/svg"> <!--?lit$3737871586$--><!--?lit$3737871586$--><path d="M10 19c-.072 0-.145 0-.218-.006A4.1 4.1 0 0 1 6 14.816V11H2.862a1.751 1.751 0 0 1-1.234-2.993L9.41.28a.836.836 0 0 1 1.18 0l7.782 7.727A1.751 1.751 0 0 1 17.139 11H14v3.882a4.134 4.134 0 0 1-.854 2.592A3.99 3.99 0 0 1 10 19Zm0-17.193L2.685 9.071a.251.251 0 0 0 .177.429H7.5v5.316A2.63 2.63 0 0 0 9.864 17.5a2.441 2.441 0 0 0 1.856-.682A2.478 2.478 0 0 0 12.5 15V9.5h4.639a.25.25 0 0 0 .176-.429L10 1.807Z"></path><!--?--> </svg>
+                    <svg rpl="" fill="currentColor" height="16" class="upvote-icon filled" style="display: none;" viewBox="0 0 20 20" width="16" xmlns="http://www.w3.org/2000/svg"> <!--?lit$3737871586$--><!--?lit$3737871586$--><path d="M10 19c-.072 0-.145 0-.218-.006A4.1 4.1 0 0 1 6 14.816V11H2.862a1.751 1.751 0 0 1-1.234-2.993L9.41.28a.836.836 0 0 1 1.18 0l7.782 7.727A1.751 1.751 0 0 1 17.139 11H14v3.882a4.134 4.134 0 0 1-.854 2.592A3.99 3.99 0 0 1 10 19Z"></path><!--?--> </svg>
+                </button>
+                <span class="vote-count" contenteditable="true">215</span>
+                <span class="vote-separator" style="display: none;">|</span>
+                <button class="vote-button downvote">
+                    <svg rpl="" fill="currentColor" height="16" class="downvote-icon outline" viewBox="0 0 20 20" width="16" xmlns="http://www.w3.org/2000/svg"> <!--?lit$3737871586$--><!--?lit$3737871586$--><path d="M10 1c.072 0 .145 0 .218.006A4.1 4.1 0 0 1 14 5.184V9h3.138a1.751 1.751 0 0 1 1.234 2.993L10.59 19.72a.836.836 0 0 1-1.18 0l-7.782-7.727A1.751 1.751 0 0 1 2.861 9H6V5.118a4.134 4.134 0 0 1 .854-2.592A3.99 3.99 0 0 1 10 1Zm0 17.193 7.315-7.264a.251.251 0 0 0-.177-.429H12.5V5.184A2.631 2.631 0 0 0 10.136 2.5a2.441 2.441 0 0 0-1.856.682A2.478 2.478 0 0 0 7.5 5v5.5H2.861a.251.251 0 0 0-.176.429L10 18.193Z"></path><!--?--> </svg>
+                    <svg rpl="" fill="currentColor" height="16" class="downvote-icon filled" style="display: none;" viewBox="0 0 20 20" width="16" xmlns="http://www.w3.org/2000/svg"> <!--?lit$3737871586$--><!--?lit$3737871586$--><path d="M10 1c.072 0 .145 0 .218.006A4.1 4.1 0 0 1 14 5.184V9h3.138a1.751 1.751 0 0 1 1.234 2.993L10.59 19.72a.836.836 0 0 1-1.18 0l-7.782-7.727A1.751 1.751 0 0 1 2.861 9H6V5.118a4.134 4.134 0 0 1 .854-2.592A3.99 3.99 0 0 1 10 1Z"></path><!--?--> </svg>
+                </button>
+              </div>
+              <button class="action-btn comment">
+                <svg rpl="" aria-hidden="true" class="icon-comment" fill="currentColor" height="16" icon-name="comment-outline" viewBox="0 0 20 20" width="16" xmlns="http://www.w3.org/2000/svg"> <!--?lit$6612401077$--><!--?lit$6612401077$--><path d="M10 19H1.871a.886.886 0 0 1-.798-.52.886.886 0 0 1 .158-.941L3.1 15.771A9 9 0 1 1 10 19Zm-6.549-1.5H10a7.5 7.5 0 1 0-5.323-2.219l.54.545L3.451 17.5Z"></path><!--?--> </svg>
+                <span class="comment-count" contenteditable="true">24</span>
+              </button>
+
+              <div class="post-actions-right">
+                <button class="action-btn give-award">
+                    <svg rpl="" aria-hidden="true" class="award-default-icon" fill="currentColor" height="16" icon-name="award-outline" viewBox="0 0 20 20" width="16" xmlns="http://www.w3.org/2000/svg"> <!--?lit$674533992$--><!--?lit$674533992$--><path d="m18.66 15.36-2.593-3.885A6.997 6.997 0 1 0 3 8c0 1.22.322 2.42.932 3.476l-2.582 3.87a.961.961 0 0 0-.05 1.017c.168.315.525.51.88.483l2.177-.087.741 1.993c.108.333.41.59.756.64a.994.994 0 0 0 .947-.422l2.67-3.997c.35.026.708.026 1.059 0l2.678 4.01a.98.98 0 0 0 .794.418c.388 0 .761-.255.889-.621l.75-2.022 2.155.086a.976.976 0 0 0 .903-.481.955.955 0 0 0-.039-1.003ZM6.143 17.256c-.208-.557-.343-1.488-.871-1.85-.543-.37-1.485-.126-2.092-.101l1.7-2.547a7.009 7.009 0 0 0 2.992 1.909l-1.73 2.589ZM4.5 8a5.5 5.5 0 1 1 5.5 5.5A5.507 5.507 0 0 1 4.5 8Zm10.241 7.393c-.54.354-.675 1.302-.883 1.863l-1.73-2.59a7.007 7.007 0 0 0 2.992-1.908l1.7 2.547c-.601-.024-1.537-.268-2.079.088Z"></path><!--?--> </svg>
+                    <img class="award-icon-in-button" style="display: none;" src="" alt="Award Icon">
+                    <span class="award-count-in-button" style="display: none;" contenteditable="true">1</span>
+                </button>
+                <button class="action-btn share">
+                    <svg rpl="" aria-hidden="true" class="icon-share" fill="currentColor" height="16" icon-name="share-new-outline" viewBox="0 0 20 20" width="16" xmlns="http://www.w3.org/2000/svg"> <!--?lit$6612401077$--><!--?lit$6612401077$--><path d="M2.239 18.723A1.235 1.235 0 0 1 1 17.488C1 11.5 4.821 6.91 10 6.505V3.616a1.646 1.646 0 0 1 2.812-1.16l6.9 6.952a.841.841 0 0 1 0 1.186l-6.9 6.852A1.645 1.645 0 0 1 10 16.284v-2.76c-2.573.243-3.961 1.738-5.547 3.445-.437.47-.881.949-1.356 1.407-.23.223-.538.348-.858.347ZM10.75 7.976c-4.509 0-7.954 3.762-8.228 8.855.285-.292.559-.59.832-.883C5.16 14 7.028 11.99 10.75 11.99h.75v4.294a.132.132 0 0 0 .09.134.136.136 0 0 0 .158-.032L18.186 10l-6.438-6.486a.135.135 0 0 0-.158-.032.134.134 0 0 0-.09.134v4.36h-.75Z"></path><!--?--> </svg>
+                    <span class="share-text">Share</span>
+                </button>
+              </div>
+
+              <div class="award-popup">
+                <button class="award-popup-close">✕</button>
+                <div class="award-categories">
+                  <div class="award-category">
+                    <h3>Medals</h3>
+                    <div class="award-options">
+                      <div class="award-option" data-type="none">
+                        <span class="award-option-label">No Awards</span>
+                      </div>
+                      <div class="award-option" data-type="platinum">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/medals/platinum.png" class="award-icon" alt="Platinum award">
+                        <span class="award-option-label">Platinum</span>
+                      </div>
+                      <div class="award-option" data-type="gold">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/medals/gold.png" class="award-icon" alt="Gold award">
+                        <span class="award-option-label">Gold</span>
+                      </div>
+                      <div class="award-option" data-type="silver">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/medals/silver.png" class="award-icon" alt="Silver award">
+                        <span class="award-option-label">Silver</span>
+                      </div>
+                      <div class="award-option" data-type="mithril">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/medals/Mithril.gif" class="award-icon" alt="Mithril award">
+                        <span class="award-option-label">Mithril</span>
+                      </div>
+                      <div class="award-option" data-type="trinity">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/medals/Trinity.gif" class="award-icon" alt="Trinity award">
+                        <span class="award-option-label">Trinity</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="award-category">
+                    <h3>Popular Reactions</h3>
+                    <div class="award-options">
+                      <div class="award-option" data-type="wholesome">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/reactions/5izbv4fn0md41_Wholesome.png" class="award-icon" alt="Wholesome award">
+                        <span class="award-option-label">Wholesome</span>
+                      </div>
+                      <div class="award-option" data-type="helpful">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/reactions/klvxk1wggfd41_Helpful.png" class="award-icon" alt="Helpful award">
+                        <span class="award-option-label">Helpful</span>
+                      </div>
+                      <div class="award-option" data-type="mindblown">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/reactions/wa987k0p4v541_MindBlown.png" class="award-icon" alt="Mind Blown award">
+                        <span class="award-option-label">Mind Blown</span>
+                      </div>
+                      <div class="award-option" data-type="facepalm">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/reactions/ey2iodron2s41_Facepalm.png" class="award-icon" alt="Facepalm award">
+                        <span class="award-option-label">Facepalm</span>
+                      </div>
+                      <div class="award-option" data-type="this">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/reactions/vu6om0xnb7e41_This.png" class="award-icon" alt="This award">
+                        <span class="award-option-label">This</span>
+                      </div>
+                      <div class="award-option" data-type="pressf">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/reactions/tcofsbf92md41_PressF.png" class="award-icon" alt="Press F award">
+                        <span class="award-option-label">Press F</span>
+                      </div>
+                      <div class="award-option" data-type="heartwarming">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/reactions/v1mxw8i6wnf51_Heartwarming.png" class="award-icon" alt="Heartwarming award">
+                        <span class="award-option-label">Heartwarming</span>
+                      </div>
+                      <div class="award-option" data-type="deceased">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/reactions/2jd92wtn25g41_ImDeceased.png" class="award-icon" alt="I'm Deceased award">
+                        <span class="award-option-label">I'm Deceased</span>
+                      </div>
+                      <div class="award-option" data-type="gotthew">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/reactions/9avdcwgupta41_GottheW.png" class="award-icon" alt="Got the W award">
+                        <span class="award-option-label">Got the W</span>
+                      </div>
+                      <div class="award-option" data-type="hearteyes">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/reactions/12kz7a7j4v541_HeartEyes.png" class="award-icon" alt="Heart Eyes award">
+                        <span class="award-option-label">Heart Eyes</span>
+                      </div>
+                      <div class="award-option" data-type="murica">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/reactions/18mwqw5th9e51_MURICA.png" class="award-icon" alt="MURICA award">
+                        <span class="award-option-label">MURICA</span>
+                      </div>
+                      <div class="award-option" data-type="evilcackle">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/reactions/43zl6dfcg9e51_EvilCackle.png" class="award-icon" alt="Evil Cackle award">
+                        <span class="award-option-label">Evil Cackle</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="award-category">
+                    <h3>Animated Awards</h3>
+                    <div class="award-options">
+                      <div class="award-option" data-type="crabrave">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/reactions/CrabRave_512.gif" class="award-icon" alt="Crab Rave award">
+                        <span class="award-option-label">Crab Rave</span>
+                      </div>
+                      <div class="award-option" data-type="tableslap">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/reactions/TableSlap_512.gif" class="award-icon" alt="Table Slap award">
+                        <span class="award-option-label">Table Slap</span>
+                      </div>
+                      <div class="award-option" data-type="superheart">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/reactions/Superheart_512.gif" class="award-icon" alt="Super Heart award">
+                        <span class="award-option-label">Super Heart</span>
+                      </div>
+                      <div class="award-option" data-type="snooclapping">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/reactions/SnooClapping_512.gif" class="award-icon" alt="Snoo Clapping award">
+                        <span class="award-option-label">Snoo Clapping</span>
+                      </div>
+                      <div class="award-option" data-type="giggle">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/reactions/Giggle_512.gif" class="award-icon" alt="Giggle award">
+                        <span class="award-option-label">Giggle</span>
+                      </div>
+                      <div class="award-option" data-type="illuminati">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/reactions/Illuminati_512.gif" class="award-icon" alt="Illuminati award">
+                        <span class="award-option-label">Illuminati</span>
+                      </div>
+                      <div class="award-option" data-type="beatingheart">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/animated/Beating_Heart_512.gif" class="award-icon" alt="Beating Heart award">
+                        <span class="award-option-label">Beating Heart</span>
+                      </div>
+                      <div class="award-option" data-type="bemine">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/animated/BeMineValentine_512.gif" class="award-icon" alt="Be Mine award">
+                        <span class="award-option-label">Be Mine</span>
+                      </div>
+                      <div class="award-option" data-type="blowkiss">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/animated/blow_a_kiss_512.gif" class="award-icon" alt="Blow Kiss award">
+                        <span class="award-option-label">Blow Kiss</span>
+                      </div>
+                      <div class="award-option" data-type="calculating">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/animated/calculating_b_512.gif" class="award-icon" alt="Calculating award">
+                        <span class="award-option-label">Calculating</span>
+                      </div>
+                      <div class="award-option" data-type="heartbreak">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/animated/heart_break_512.gif" class="award-icon" alt="Heart Break award">
+                        <span class="award-option-label">Heart Break</span>
+                      </div>
+                      <div class="award-option" data-type="shy">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/animated/I_shy_512.gif" class="award-icon" alt="I'm Shy award">
+                        <span class="award-option-label">I'm Shy</span>
+                      </div>
+                      <div class="award-option" data-type="levelup">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/animated/Levelup_512.gif" class="award-icon" alt="Level Up award">
+                        <span class="award-option-label">Level Up</span>
+                      </div>
+                      <div class="award-option" data-type="rocket">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/animated/Rocket_512.gif" class="award-icon" alt="Rocket award">
+                        <span class="award-option-label">Rocket</span>
+                      </div>
+                      <div class="award-option" data-type="waitwhat">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/animated/wait_what_512.gif" class="award-icon" alt="Wait What award">
+                        <span class="award-option-label">Wait What</span>
+                      </div>
+                      <div class="award-option" data-type="woahdude">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/animated/Woah_dude_512.gif" class="award-icon" alt="Woah Dude award">
+                        <span class="award-option-label">Woah Dude</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="award-category">
+                    <h3>Premium Awards</h3>
+                    <div class="award-options">
+                      <div class="award-option" data-type="sidevote">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/premium/side_vote_512.gif" class="award-icon" alt="Side Vote award">
+                        <span class="award-option-label">Side Vote</span>
+                      </div>
+                      <div class="award-option" data-type="starstruck">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/premium/Starstruck_512.gif" class="award-icon" alt="Starstruck award">
+                        <span class="award-option-label">Starstruck</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="award-category">
+                    <h3>Special Awards</h3>
+                    <div class="award-options">
+                      <div class="award-option" data-type="stonksrising">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/reactions/s5edqq9abef41_StonksRising.png" class="award-icon" alt="Stonks Rising award">
+                        <span class="award-option-label">Stonks Rising</span>
+                      </div>
+                      <div class="award-option" data-type="stonksfalling">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/reactions/ree13odobef41_StonksFalling.png" class="award-icon" alt="Stonks Falling award">
+                        <span class="award-option-label">Stonks Falling</span>
+                      </div>
+                      <div class="award-option" data-type="goat">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/reactions/x52x5be57fd41_GOAT.png" class="award-icon" alt="GOAT award">
+                        <span class="award-option-label">GOAT</span>
+                      </div>
+                      <div class="award-option" data-type="buffdoge">
+                        <img src="https://raw.githubusercontent.com/androiddevnotes/reddit-awards/main/assets/reactions/zc4a9vk5zmc51_BuffDoge.png" class="award-icon" alt="Buff Doge award">
+                        <span class="award-option-label">Buff Doge</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flair-dropdown">
+                <div class="flair-option" data-type="none">
+                  <span>No Flair</span>
+                </div>
+                <div class="flair-option" data-type="announcement">
+                  <span>Announcement</span>
+                </div>
+                <div class="flair-option" data-type="discussion">
+                  <span>Discussion</span>
+                </div>
+                <div class="flair-option" data-type="question">
+                  <span>Question</span>
+                </div>
+              </div>
+          </div>
+        
+        <div class="bottom-controls">
+            <div class="theme-selector">
+                <span class="theme-label">Theme:</span>
+                <button class="theme-btn light active">Light</button>
+                <button class="theme-btn dark">Dark</button>
+            </div>
+            <div class="button-group">
+                <div class="pc-mobile-toggle">
+                    <span class="toggle-label">PC/Mobile</span>
+                    <label class="switch">
+                        <input type="checkbox" id="viewToggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <button class="download-btn">
+                    <div class="download-icon"></div>
+                    Download
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // DOM Elements
+        const body = document.body;
+        const editButton = document.querySelector('.edit-btn');
+        const previewButton = document.querySelector('.preview-btn');
+
+        const editableElements = document.querySelectorAll('[contenteditable="true"]');
+        const imageUpload = document.querySelector('.image-upload');
+        const themeButtons = document.querySelectorAll('.theme-btn');
+
+        const colorPickerInput = document.querySelector('.color-picker-input');
+        const flairDropdown = document.querySelector('.flair-dropdown');
+        const flairOptions = document.querySelectorAll('.flair-option');
+        
+        const giveAwardButton = document.querySelector('.give-award');
+        const awardDropdown = document.querySelector('.award-dropdown');
+        const awardOptions = document.querySelectorAll('.award-option');
+
+        const fileInput = document.querySelector('.file-input');
+        const uploadArea = document.querySelector('.upload-area');
+        const plusIcon = document.querySelector('.plus-icon');
+        const uploadText = document.querySelector('.upload-text');
+        const downloadButton = document.querySelector('.download-btn');
+        const postFlair = document.querySelector('.post-flair');
+
+        const subredditIconContainer = document.querySelector('.subreddit-icon-container');
+        const subredditIconInput = document.querySelector('.subreddit-icon-input');
+        const subredditNameEditable = document.querySelector('.subreddit-name-editable');
+        const editIconOverlay = document.querySelector('.edit-icon-overlay');
+
+        const voteSection = document.querySelector('.vote-section');
+        const upvoteButton = document.querySelector('.vote-button.upvote');
+        const downvoteButton = document.querySelector('.vote-button.downvote');
+        const upvoteOutline = upvoteButton.querySelector('.upvote-icon.outline');
+        const upvoteFilled = upvoteButton.querySelector('.upvote-icon.filled');
+        const downvoteOutline = downvoteButton.querySelector('.downvote-icon.outline');
+        const downvoteFilled = downvoteButton.querySelector('.downvote-icon.filled');
+
+        // Award functionality
+        let currentAwardType = null;
+        let currentAwardIcon = null;
+
+        function updateAwardButton() {
+            const awardIconInButton = document.querySelector('.award-icon-in-button');
+            const awardCountInButton = document.querySelector('.award-count-in-button');
+            const awardDefaultIcon = document.querySelector('.give-award .award-default-icon');
+
+            if (currentAwardType === null) {
+                // No award selected → show default icon, hide img & count
+                awardDefaultIcon.style.display = '';
+                awardIconInButton.style.display = 'none';
+                awardCountInButton.style.display = 'none';
+            } else {
+                // Award selected → hide default icon, show img & count
+                awardDefaultIcon.style.display = 'none';
+                awardIconInButton.style.display = '';
+                awardCountInButton.style.display = '';
+            
+                awardIconInButton.src = currentAwardIcon;
+                awardCountInButton.textContent = currentAwardCount;
+            }
+        }
+
+        awardOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                const type = option.dataset.type;
+            
+                if (type === 'none') {
+                    // Reset award
+                    currentAwardType = null;
+                    currentAwardIcon = null;
+                    currentAwardCount = 0;
+                } else {
+                    // Set award type and icon
+                    const imgSrc = option.querySelector('img') ? option.querySelector('img').src : '';
+                    currentAwardType = type;
+                    currentAwardIcon = imgSrc;
+                    currentAwardCount = 1; // Default to 1 when selecting
+                }
+            
+                updateAwardButton();
+            
+                // Close popup
+                awardPopup.classList.remove('show');
+            });
+        });
+
+        // Award popup
+        const awardPopup = document.querySelector('.award-popup');
+
+        // Award popup close button
+        const awardPopupClose = document.querySelector('.award-popup-close');
+
+        // Show award container after clicking on award button
+        giveAwardButton.addEventListener('click', (e) => {
+            if (!document.body.classList.contains('preview-mode')) {
+                // Prevent popup if user clicked on the award count
+                if (e.target.classList.contains('award-count-in-button') || e.target.closest('.award-count-in-button')) {
+                    return; // Do nothing
+                }
+            
+                e.stopPropagation();
+                awardPopup.classList.add('show');
+            }
+        });
+
+        // Close award popup
+        awardPopupClose.addEventListener('click', () => {
+            awardPopup.classList.remove('show');
+        });
+
+        const awardCountInButton = document.querySelector('.award-count-in-button');
+
+        awardCountInButton.addEventListener('focus', (e) => {
+            // Use a tiny timeout so browser finishes focus first
+            setTimeout(() => {
+                const range = document.createRange();
+                const selection = window.getSelection();
+                range.selectNodeContents(awardCountInButton);
+                range.collapse(false); // Move to end
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }, 0);
+        });
+
+
+        // Event listener for clicking the edit icon
+        editIconOverlay.addEventListener('click', () => {
+          subredditIconInput.click();
+        });
+
+        // Event listener for file selection
+        subredditIconInput.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+              const subredditIcon = subredditIconContainer.querySelector('.subreddit-icon');
+              subredditIcon.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+        
+        // Toggle preview mode
+        function togglePreviewMode(isPreview) {
+            document.body.classList.toggle('preview-mode', isPreview);
+            editButton.classList.toggle('active', !isPreview);
+            previewButton.classList.toggle('active', isPreview);
+            
+            editableElements.forEach(element => {
+                element.contentEditable = isPreview ? 'false' : 'true';
+                element.style.backgroundColor = isPreview ? 'transparent' : '';
+                element.style.padding = isPreview ? '0' : '';
+            });
+
+            // Update post-time-text for preview mode
+            const postTimeNumber = document.querySelector('.post-time-number').textContent.trim();
+            const postTimeUnit = document.querySelector('.post-time-unit').value;
+            const postTimeText = document.querySelector('.post-time-text');
+
+            if (document.body.classList.contains('mobile-view')) {
+                postTimeText.textContent = formatMobileTime(postTimeNumber, postTimeUnit);
+            } else {
+                postTimeText.textContent = `${postTimeNumber} ${postTimeUnit} ago`;
+            }
+
+            const hasImage = uploadArea.querySelector('img');
+            if (!hasImage) {
+                uploadArea.style.display = isPreview ? 'none' : 'block';
+            }
+            imageUpload.style.pointerEvents = isPreview ? 'none' : 'auto';
+        }
+        
+        // Event listeners
+        editButton.addEventListener('click', () => togglePreviewMode(false));
+        previewButton.addEventListener('click', () => togglePreviewMode(true));
+        
+        // Theme switching
+        themeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const theme = button.classList.contains('light') ? 'light' : 'dark';
+                
+                themeButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                
+                body.classList.remove('light', 'dark');
+                body.classList.add(theme);
+            });
+        });
+        
+        // Contrast calculation function
+        function getContrastColor(hexcolor) {
+            // Convert hex to RGB
+            const r = parseInt(hexcolor.slice(1,3), 16);
+            const g = parseInt(hexcolor.slice(3,5), 16);
+            const b = parseInt(hexcolor.slice(5,7), 16);
+            
+            // Calculate relative luminance
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            
+            // Return black or white based on luminance
+            return luminance > 0.5 ? '#000000' : '#ffffff';
+        }
+
+        // Show flair dropdown on flair text click
+        postFlair.addEventListener('click', (e) => {
+            if (!document.body.classList.contains('preview-mode')) {
+                e.stopPropagation();
+                const rect = postFlair.getBoundingClientRect();
+                flairDropdown.style.top = `${rect.bottom + 5}px`;
+                flairDropdown.style.left = `${rect.left}px`;
+                flairDropdown.classList.toggle('show');
+                
+                flairDropdown.classList.remove('dark');
+                if (document.body.classList.contains('dark')) {
+                    flairDropdown.classList.add('dark');
+                }
+            }
+        });
+
+        // Handle color picker input
+        colorPickerInput.addEventListener('input', (e) => {
+            const color = e.target.value;
+            postFlair.style.backgroundColor = color;
+            postFlair.style.color = getContrastColor(color);
+        });
+        
+        const addFlairButton = document.querySelector('.add-flair-button');
+        const flairContainer = document.querySelector('.flair-container');
+
+        flairOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                const type = option.dataset.type;
+                const flairSpan = postFlair.querySelector('span');
+                
+                if (type === 'none') {
+                    flairContainer.style.display = 'none';
+                    addFlairButton.style.display = 'inline-block'; // show Add Flair button
+                } else {
+                    flairContainer.style.display = 'flex';
+                    postFlair.style.display = 'inline-block';
+                    flairSpan.textContent = option.querySelector('span').textContent;
+                    addFlairButton.style.display = 'none'; // hide Add Flair button
+                }
+                flairDropdown.classList.remove('show');
+            });
+        });
+
+        // Add flair button
+        addFlairButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            flairDropdown.classList.toggle('show');
+
+            flairDropdown.classList.remove('dark');
+            if (document.body.classList.contains('dark')) {
+                flairDropdown.classList.add('dark');
+            }
+        });
+        
+        // Voting
+        upvoteButton.addEventListener('click', () => {
+            const isUpvoted = voteSection.classList.contains('upvoted');
+
+            if (isUpvoted) {
+                // Remove upvote → back to neutral
+                voteSection.classList.remove('upvoted');
+                upvoteOutline.style.display = '';
+                upvoteFilled.style.display = 'none';
+            } else {
+                // Set upvote
+                voteSection.classList.add('upvoted');
+                voteSection.classList.remove('downvoted');
+            
+                upvoteOutline.style.display = 'none';
+                upvoteFilled.style.display = '';
+            
+                downvoteOutline.style.display = '';
+                downvoteFilled.style.display = 'none';
+            }
+        });
+        
+        downvoteButton.addEventListener('click', () => {
+            const isDownvoted = voteSection.classList.contains('downvoted');
+                
+            if (isDownvoted) {
+                // Remove downvote → back to neutral
+                voteSection.classList.remove('downvoted');
+                downvoteOutline.style.display = '';
+                downvoteFilled.style.display = 'none';
+            } else {
+                // Set downvote
+                voteSection.classList.add('downvoted');
+                voteSection.classList.remove('upvoted');
+            
+                downvoteOutline.style.display = 'none';
+                downvoteFilled.style.display = '';
+            
+                upvoteOutline.style.display = '';
+                upvoteFilled.style.display = 'none';
+            }
+        });
+        
+        // Image upload
+        fileInput.addEventListener('change', handleFileSelect);
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('drop', handleDrop);
+        
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                displayImage(file);
+            }
+        }
+        
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                displayImage(file);
+            }
+        }
+        
+        function displayImage(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.maxWidth = '100%';
+                img.style.borderRadius = '16px';
+                
+                plusIcon.style.display = 'none';
+                uploadText.style.display = 'none';
+                
+                Array.from(uploadArea.children)
+                    .filter(child => child.tagName === 'IMG')
+                    .forEach(img => img.remove());
+                
+                uploadArea.appendChild(img);
+                uploadArea.style.padding = '0';
+                uploadArea.style.display = 'block';
+                const removeButton = uploadArea.querySelector('.remove-image-button');
+                removeButton.style.display = 'flex';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Remove image button functionality
+        const removeImageButton = document.querySelector('.remove-image-button');
+        removeImageButton.addEventListener('click', (e) => {
+            e.stopPropagation(); // prevent triggering upload again
+        
+            // Remove image if present
+            const image = uploadArea.querySelector('img');
+            if (image) {
+                image.remove();
+            }
+        
+            // Restore upload area visuals
+            plusIcon.style.display = 'flex';
+            uploadText.style.display = 'block';
+            uploadArea.style.padding = '32px';
+            removeImageButton.style.display = 'none';
+        });
+        
+        // Download functionality
+        async function handleRedditDownload() {
+            const redditCard = document.querySelector('.reddit-card');
+            if (!redditCard) {
+                showToast('Reddit card not found', true);
+                return;
+            }
+        
+            // Save preview mode state
+            const wasPreviewMode = document.body.classList.contains('preview-mode');
+            if (!wasPreviewMode) {
+                togglePreviewMode(true);
+            }
+        
+            try {
+                showToast('Preparing your post...');
+        
+                // Get exact dimensions
+                const rect = redditCard.getBoundingClientRect();
+        
+                // Create a temporary container for the clone
+                const tempContainer = document.createElement('div');
+                tempContainer.style.position = 'absolute';
+                tempContainer.style.left = '-9999px';
+                tempContainer.style.top = '-9999px';
+                document.body.appendChild(tempContainer);
+        
+                // Clone the reddit card
+                const clone = redditCard.cloneNode(true);
+                clone.style.width = rect.width + 'px';
+                clone.style.margin = '0';
+                clone.style.transform = 'none';
+                
+                // Remove edit-mode styles
+                clone.querySelectorAll('[contenteditable]').forEach(el => {
+                    el.removeAttribute('contenteditable');
+                    el.style.backgroundColor = 'transparent';
+                    el.style.padding = '0';
+                    el.style.borderRadius = '0';
+                    el.style.outline = 'none';
+                });
+        
+                // Handle upload area
+                const uploadArea = clone.querySelector('.upload-area');
+                if (uploadArea && !uploadArea.querySelector('img')) {
+                    uploadArea.style.display = 'none';
+                }
+
+
+
+                
+        
+                // Add clone to temp container
+                tempContainer.appendChild(clone);
+        
+                // Wait for everything to be ready
+                await new Promise(resolve => setTimeout(resolve, 100));
+        
+                // Capture with html2canvas
+                const canvas = await html2canvas(clone, {
+                    scale: 3,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: getComputedStyle(redditCard).backgroundColor,
+                    logging: false,
+                    letterRendering: true,
+                    imageTimeout: 0,
+                    removeContainer: false
+                });
+        
+                // Generate filename
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                const filename = `reddit_${timestamp}.png`;
+        
+                // Convert to blob and download
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        throw new Error('Failed to create image blob');
+                    }
+        
+                    // Create download link
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+        
+                    // Cleanup
+                    setTimeout(() => {
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                        document.body.removeChild(tempContainer);
+                    }, 100);
+        
+                    showToast('Post downloaded successfully!');
+                }, 'image/png', 1.0);
+        
+            } catch (error) {
+                console.error('Download failed:', error);
+                showToast('Failed to download post. Please try again.', true);
+            } finally {
+                // Restore preview mode
+                if (!wasPreviewMode) {
+                    togglePreviewMode(false);
+                }
+            }
+        }
+
+        function showToast(message, isError = false) {
+            // Remove any existing toast first
+            const existingToast = document.querySelector('.toast-message');
+            if (existingToast) {
+                existingToast.remove();
+            }
+        
+            // Create new toast
+            const toast = document.createElement('div');
+            toast.className = 'toast-message';
+            
+            Object.assign(toast.style, {
+                position: 'fixed',
+                bottom: '20px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                backgroundColor: isError ? '#ff4d4f' : '#0ECF7F',
+                color: 'white',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                zIndex: '1000',
+                opacity: '0',
+                transition: 'opacity 0.3s',
+                whiteSpace: 'nowrap',
+                maxWidth: '90%',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+            });
+            
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            // Show toast
+            requestAnimationFrame(() => toast.style.opacity = '1');
+            
+            // Hide and remove toast
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!flairDropdown.contains(e.target) && !postFlair.contains(e.target)) {
+                flairDropdown.classList.remove('show');
+            }
+            
+            if (!awardPopup.contains(e.target) && !giveAwardButton.contains(e.target)) {
+                awardPopup.classList.remove('show');
+            }
+        });
+        
+        // Format numbers in editable fields
+        document.querySelectorAll('.vote-count, .comment-count, .award-count-in-button').forEach(el => {
+            el.addEventListener('blur', (e) => {
+                let value = e.target.textContent.replace(/[^0-9]/g, '');
+                value = parseInt(value) || 0;
+        
+                if (value === 0) {
+                    e.target.textContent = '0';
+                } else {
+                    if (value >= 1000000) {
+                        e.target.textContent = (value / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+                    } else if (value >= 1000) {
+                        e.target.textContent = (value / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+                    } else {
+                        e.target.textContent = value.toString();
+                    }
+                }
+            });
+        
+            el.addEventListener('focus', (e) => {
+                let value = e.target.textContent;
+                if (!value.trim()) {
+                    e.target.textContent = '0';
+                } else {
+                    if (value.includes('K')) {
+                        value = parseFloat(value) * 1000;
+                    } else if (value.includes('M')) {
+                        value = parseFloat(value) * 1000000;
+                    }
+                    e.target.textContent = parseInt(value);
+                }
+            });
+        });
+        
+        // Prevent line breaks in editable fields
+        document.querySelectorAll('.subreddit-name, .user-name, .post-time, .vote-count, .comment-count, .post-time-number, .award-count-in-button').forEach(el => {
+            el.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.target.blur();
+                }
+            });
+        });
+        
+        // Sanitize the number
+        document.querySelector('.post-time-number').addEventListener('blur', (e) => {
+            let value = e.target.textContent.replace(/[^0-9]/g, '');
+            if (value === '') value = '0';
+            e.target.textContent = value;
+        });
+        
+        // Subreddit name validation
+        function sanitizeSubredditName(text) {
+            // Allow only A-Z, a-z, 0-9, _
+            return text.replace(/[^A-Za-z0-9_]/g, '').slice(0, 21);
+        }
+
+        subredditNameEditable.addEventListener('input', (e) => {
+            const sanitized = sanitizeSubredditName(e.target.textContent);
+            e.target.textContent = sanitized;
+        
+            // Move caret to end after sanitizing
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.selectNodeContents(e.target);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        });
+
+        subredditNameEditable.addEventListener('blur', (e) => {
+            const text = e.target.textContent.trim();
+            if (text.length < 3) {
+                // Enforce min length
+                e.target.textContent = 'SocialPlug';
+            }
+        });
+
+        // Mobile view methods
+        function formatMobileTime(number, unit) {
+            let letter = '';
+            switch (unit) {
+                case 'min.': letter = 'm'; break;
+                case 'hr.': letter = 'h'; break;
+                case 'day': letter = 'd'; break;
+                case 'days': letter = 'd'; break;
+                case 'yr.': letter = 'y'; break;
+            }
+            return `${number}${letter}`;
+        }
+
+        const viewToggle = document.querySelector('#viewToggle');
+
+        viewToggle.addEventListener('change', () => {
+            if (viewToggle.checked) {
+                // Mobile view enabled
+                document.body.classList.add('mobile-view');
+            } else {
+                // PC view
+                document.body.classList.remove('mobile-view');
+            }
+        
+            // Force update post time text after changing mode
+            const postTimeNumber = document.querySelector('.post-time-number').textContent.trim();
+            const postTimeUnit = document.querySelector('.post-time-unit').value;
+            const postTimeText = document.querySelector('.post-time-text');
+        
+            if (document.body.classList.contains('mobile-view')) {
+                postTimeText.textContent = formatMobileTime(postTimeNumber, postTimeUnit);
+            } else {
+                postTimeText.textContent = `${postTimeNumber} ${postTimeUnit} ago`;
+            }
+        });
+
+
+        // Handle download button click
+        downloadButton.addEventListener('click', handleRedditDownload);
+        
+    </script>
+</body>
+</html>
