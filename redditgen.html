@@ -1228,6 +1228,67 @@ body.dark .award-popup::before {
     background-color: var(--bg-light);
 }
 
+/* Download modal */
+.image-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.modal-backdrop {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  top: 0;
+  left: 0;
+}
+
+.modal-content {
+  position: relative;
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  z-index: 10001;
+  text-align: center;
+  max-width: 90vw;
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  background: #eee;
+  border: none;
+  border-radius: 50%;
+  font-size: 18px;
+  font-weight: bold;
+  line-height: 32px;
+  text-align: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.modal-instruction {
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.modal-image {
+  max-width: 100%;
+  border-radius: 12px;
+}
+
+
 </style>
 
 
@@ -1578,6 +1639,16 @@ body.dark .award-popup::before {
                 </button>
             </div>
         </div>
+
+        <div id="image-modal" class="image-modal" style="display:none;">
+          <div class="modal-backdrop"></div>
+          <div class="modal-content">
+            <button class="modal-close" id="modal-close">✕</button>
+            <p class="modal-instruction">Tap and hold the image to save it</p>
+            <img class="modal-image" id="modal-image" src="" alt="Post Image"/>
+          </div>
+        </div>
+
     </div>
     
     <script>
@@ -1951,115 +2022,241 @@ body.dark .award-popup::before {
             uploadArea.style.padding = '32px';
             removeImageButton.style.display = 'none';
         });
+
+        // Download modal methods
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.getElementById('image-modal');
+            const modalImage = document.getElementById('modal-image');
+            const closeBtn = document.getElementById('modal-close');
         
-        // Download functionality
+            if (!modal || !modalImage || !closeBtn) {
+                console.error("Modal elements missing!");
+                return;
+            }
+        
+            closeBtn.addEventListener('click', () => {
+                modal.style.display = 'none';
+                modalImage.src = '';
+            });
+        });
+
+        
+        function showImageModal(imageUrl) {
+            console.log("Running showImageModal");
+            const modal = document.getElementById('image-modal');
+            const modalImage = document.getElementById('modal-image');
+        
+            if (!modal || !modalImage) {
+                console.error("Modal elements not found in showImageModal");
+                return;
+            }
+        
+            modalImage.src = imageUrl || 'https://via.placeholder.com/600x400?text=Test+Image';
+            modal.style.display = 'flex';
+        }
+
+        
         async function handleRedditDownload() {
+    const redditCard = document.querySelector('.reddit-card');
+    if (!redditCard) {
+        showToast('Reddit card not found', true);
+        return;
+    }
+
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const wasPreviewMode = document.body.classList.contains('preview-mode');
+    if (!wasPreviewMode) togglePreviewMode(true);
+
+    let originalViewport = null;
+    let lazyImages = [];
+
+    try {
+        showToast('Preparing your post...');
+
+        // === Mobile-only hacks ===
+        if (isMobile) {
+            const viewportMeta = document.querySelector('meta[name="viewport"]');
+            if (viewportMeta) {
+                originalViewport = viewportMeta.getAttribute('content');
+                viewportMeta.setAttribute('content', 'width=800');
+            }
+
+            lazyImages = Array.from(document.querySelectorAll('img[loading="lazy"]'));
+            lazyImages.forEach(img => img.setAttribute('loading', 'eager'));
+
+            await new Promise(r => setTimeout(r, 500)); // let layout/images stabilize
+        }
+
+        const clone = redditCard.cloneNode(true);
+        clone.style.width = getComputedStyle(redditCard).width;
+        clone.style.margin = '0 auto';
+
+        clone.querySelectorAll('[contenteditable]').forEach(el => {
+            el.removeAttribute('contenteditable');
+            el.style.backgroundColor = 'transparent';
+            el.style.padding = '0';
+            el.style.outline = 'none';
+        });
+
+        const uploadArea = clone.querySelector('.upload-area');
+        if (uploadArea && !uploadArea.querySelector('img')) {
+            uploadArea.style.display = 'none';
+        }
+
+        const tempContainer = document.createElement('div');
+        tempContainer.style.position = 'fixed';
+        tempContainer.style.top = '0';
+        tempContainer.style.left = '0';
+        tempContainer.style.width = '100vw';
+        tempContainer.style.opacity = '0.01';
+        tempContainer.style.zIndex = '-1';
+        tempContainer.style.pointerEvents = 'none';
+
+        tempContainer.appendChild(clone);
+        document.body.appendChild(tempContainer);
+
+        await new Promise(r => setTimeout(r, isMobile ? 500 : 100));
+
+        const canvas = await html2canvas(clone, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: getComputedStyle(redditCard).backgroundColor || "#fff"
+        });
+
+        document.body.removeChild(tempContainer);
+
+        const dataUrl = canvas.toDataURL('image/png');
+
+        if (isMobile) {
+            showImageModal(dataUrl);
+        } else {
+            canvas.toBlob(blob => {
+                if (!blob) {
+                    showToast('Failed to create image.', true);
+                    return;
+                }
+
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `reddit_post_${Date.now()}.png`;
+                document.body.appendChild(link);
+                link.click();
+
+                setTimeout(() => {
+                    URL.revokeObjectURL(url);
+                    document.body.removeChild(link);
+                }, 100);
+
+                showToast('Post downloaded successfully!');
+            }, 'image/png');
+        }
+
+    } catch (err) {
+        console.error("Download error:", err);
+        alert("Something went wrong: " + err.message);
+        showToast('Something went wrong. Check console.', true);
+    } finally {
+        if (!wasPreviewMode) togglePreviewMode(false);
+
+        if (originalViewport) {
+            const viewportMeta = document.querySelector('meta[name="viewport"]');
+            viewportMeta?.setAttribute('content', originalViewport);
+        }
+
+        lazyImages.forEach(img => img.setAttribute('loading', 'lazy'));
+    }
+}
+
+
+
+        async function handleRedditDownloads() {
             const redditCard = document.querySelector('.reddit-card');
             if (!redditCard) {
                 showToast('Reddit card not found', true);
                 return;
             }
         
-            // Save preview mode state
+            const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
             const wasPreviewMode = document.body.classList.contains('preview-mode');
-            if (!wasPreviewMode) {
-                togglePreviewMode(true);
-            }
+            if (!wasPreviewMode) togglePreviewMode(true);
         
             try {
                 showToast('Preparing your post...');
-        
-                // Get exact dimensions
-                const rect = redditCard.getBoundingClientRect();
-        
-                // Create a temporary container for the clone
+            
                 const tempContainer = document.createElement('div');
-                tempContainer.style.position = 'absolute';
-                tempContainer.style.left = '-9999px';
-                tempContainer.style.top = '-9999px';
-                document.body.appendChild(tempContainer);
-        
-                // Clone the reddit card
+                tempContainer.style.position = 'fixed';
+                tempContainer.style.top = '0';
+                tempContainer.style.left = '0';
+                tempContainer.style.width = '100vw';
+                tempContainer.style.opacity = '0';
+                tempContainer.style.zIndex = '-1';
+                tempContainer.style.pointerEvents = 'none';
+            
                 const clone = redditCard.cloneNode(true);
-                clone.style.width = rect.width + 'px';
-                clone.style.margin = '0';
-                clone.style.transform = 'none';
-                
-                // Remove edit-mode styles
+                clone.style.width = getComputedStyle(redditCard).width;
+                clone.style.margin = '0 auto';
+            
                 clone.querySelectorAll('[contenteditable]').forEach(el => {
                     el.removeAttribute('contenteditable');
                     el.style.backgroundColor = 'transparent';
                     el.style.padding = '0';
-                    el.style.borderRadius = '0';
                     el.style.outline = 'none';
                 });
-        
-                // Handle upload area
+            
                 const uploadArea = clone.querySelector('.upload-area');
                 if (uploadArea && !uploadArea.querySelector('img')) {
                     uploadArea.style.display = 'none';
                 }
-
-
-
-                
-        
-                // Add clone to temp container
+            
                 tempContainer.appendChild(clone);
-        
-                // Wait for everything to be ready
-                await new Promise(resolve => setTimeout(resolve, 100));
-        
-                // Capture with html2canvas
+                document.body.appendChild(tempContainer);
+                await new Promise(r => setTimeout(r, 100));
+            
                 const canvas = await html2canvas(clone, {
-                    scale: 3,
+                    scale: 2,
                     useCORS: true,
-                    allowTaint: true,
                     backgroundColor: getComputedStyle(redditCard).backgroundColor,
-                    logging: false,
-                    letterRendering: true,
-                    imageTimeout: 0,
-                    removeContainer: false
                 });
-        
-                // Generate filename
-                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                const filename = `reddit_${timestamp}.png`;
-        
-                // Convert to blob and download
-                canvas.toBlob((blob) => {
-                    if (!blob) {
-                        throw new Error('Failed to create image blob');
-                    }
-        
-                    // Create download link
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = filename;
-                    document.body.appendChild(link);
-                    link.click();
-        
-                    // Cleanup
-                    setTimeout(() => {
-                        document.body.removeChild(link);
-                        URL.revokeObjectURL(url);
-                        document.body.removeChild(tempContainer);
-                    }, 100);
-        
-                    showToast('Post downloaded successfully!');
-                }, 'image/png', 1.0);
-        
-            } catch (error) {
-                console.error('Download failed:', error);
-                showToast('Failed to download post. Please try again.', true);
-            } finally {
-                // Restore preview mode
-                if (!wasPreviewMode) {
-                    togglePreviewMode(false);
+            
+                if (isMobile) {
+                    const dataUrl = canvas.toDataURL('image/png');
+                    showImageModal(dataUrl);
+                } else {
+                    canvas.toBlob(blob => {
+                        if (!blob) {
+                            showToast('Failed to create image.', true);
+                            return;
+                        }
+                    
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `reddit_post_${Date.now()}.png`;
+                        document.body.appendChild(link);
+                        link.click();
+                    
+                        setTimeout(() => {
+                            URL.revokeObjectURL(url);
+                            document.body.removeChild(link);
+                        }, 100);
+                    
+                        showToast('Post downloaded successfully!');
+                    }, 'image/png');
                 }
+            
+            } catch (err) {
+                console.error('Download error:', err);
+                showToast('Something went wrong. Please try again.', true);
+            } finally {
+                document.querySelectorAll('body > div').forEach(el => {
+                    if (el.style && el.style.zIndex === '-1') el.remove();
+                });
+            
+                if (!wasPreviewMode) togglePreviewMode(false);
             }
         }
+
 
         function showToast(message, isError = false) {
             // Remove any existing toast first
